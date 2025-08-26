@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ trip.name }} · Details · TripTrack{% endblock %}
+
+{% block content %}
+  {% if trip %}
+    <!-- TOP: image card + key facts (mirrors home style) -->
+    <section class="grid md:grid-cols-2 gap-8 items-center mb-10">
+      <!-- Square image as a card -->
+      <div class="flex justify-center">
+        {# Change the src to your real static file or add a banner field later #}
+        <img src="{% static 'img/imagica-banner.png' %}"
+             alt="{{ trip.name }}"
+             class="rounded-2xl shadow-lg w-72 h-72 object-cover">
+      </div>
+
+      <!-- Trip summary -->
+      <div>
+        <h1 class="text-3xl md:text-4xl font-bold tracking-tight">
+          {{ trip.name }}
+        </h1>
+        <p class="text-gray-600 mt-2">All the info you need before you join.</p>
+
+        <div class="mt-5 grid gap-2 text-sm">
+          <div><span class="font-medium">📅 Date:</span> {{ trip.date }}</div>
+          <div><span class="font-medium">🕘 Meetup:</span> {{ trip.meetup_time }}</div>
+          {% if trip.return_time %}
+            <div><span class="font-medium">↩ Return:</span> {{ trip.return_time }}</div>
+          {% endif %}
+          <div><span class="font-medium">📍 Pickup:</span> {{ trip.pickup_point }}</div>
+          <div>
+            <span class="font-medium">🪑 Seats:</span> {{ trip.capacity }}
+            {% if trip.seats_left %} ({{ trip.seats_left }} left){% endif %}
+          </div>
+        </div>
+
+        <!-- CTAs -->
+        <div class="mt-6 flex flex-wrap gap-3">
+          {% if request.user.is_authenticated %}
+            {% if request.user.email_verified %}
+              <a href="{% url 'trips:register' %}"
+                 class="inline-flex items-center rounded-lg bg-black text-white px-4 py-2 hover:bg-black/90">
+                Join this trip
+              </a>
+            {% else %}
+              <a href="{% url 'accounts:resend-verification' %}"
+                 class="inline-flex items-center rounded-lg border px-4 py-2 hover:bg-gray-100">
+                Verify your email to join
+              </a>
+            {% endif %}
+            <a href="{% url 'trips:my' %}"
+               class="inline-flex items-center rounded-lg border px-4 py-2 hover:bg-gray-100">
+              My Trip
+            </a>
+          {% else %}
+            <a href="{% url 'login' %}?next={% url 'trips:register' %}"
+               class="inline-flex items-center rounded-lg bg-black text-white px-4 py-2 hover:bg-black/90">
+              Join this trip
+            </a>
+            <a href="{% url 'accounts:signup' %}"
+               class="inline-flex items-center rounded-lg border px-4 py-2 hover:bg-gray-100">
+              Create an account
+            </a>
+          {% endif %}
+          <a href="{% url 'trips:home' %}" class="underline">Back to Home</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTRAST band: What’s included + Pricing -->
+    <section class="rounded-2xl bg-gray-50 p-6 md:p-8 mb-10">
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="rounded-2xl border bg-white p-6 shadow-sm">
+          <h2 class="text-lg font-semibold mb-3">What’s included</h2>
+          <ul class="list-disc pl-5 text-sm space-y-1">
+            <li>🎟️ Entry Pass (Theme <em>or</em> Water Park — your choice)</li>
+            <li>🚌 Luxury Bus Travel</li>
+          </ul>
+        </div>
+        <div class="rounded-2xl border bg-white p-6 shadow-sm">
+          <h2 class="text-lg font-semibold mb-3">Pricing & Discounts</h2>
+          <div class="grid gap-2 text-sm">
+            <div><span class="font-medium">💰 Fees:</span> ₹1299</div>
+            <div><span class="font-medium">🐦 Early Bird:</span> First 10 seats @ ₹1199 (till 31 Aug)</div>
+            <div><span class="font-medium">👯 Group of 8+:</span> ₹1199 per person</div>
+          </div>
+          <div class="mt-3 text-sm text-gray-600">⚡ Limited Seats — Hurry!</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Long details block (from admin) -->
+    {% if trip.details %}
+      <section class="rounded-2xl border bg-white p-6 md:p-8 mb-10 shadow-sm">
+        <h2 class="text-lg font-semibold mb-3">About this trip</h2>
+        <div class="prose max-w-none text-sm leading-relaxed">
+          {{ trip.details|linebreaksbr }}
+        </div>
+      </section>
+    {% endif %}
+
+    <!-- FAQ / Notes -->
+    <section class="grid md:grid-cols-2 gap-6">
+      <div class="rounded-2xl border bg-white p-6 shadow-sm">
+        <h3 class="font-semibold mb-3">FAQs</h3>
+        <div class="text-sm">
+          <p class="font-medium">Can I choose Theme or Water Park?</p>
+          <p class="text-gray-600 mb-3">Yes — pick your park while joining.</p>
+
+          <p class="font-medium">How will I get my ticket?</p>
+          <p class="text-gray-600 mb-3">We’ll email the Imagica booking reference once booked.</p>
+
+          <p class="font-medium">Where do we meet?</p>
+          <p class="text-gray-600">See pickup details above. We’ll also email reminders.</p>
+        </div>
+      </div>
+      <div class="rounded-2xl border bg-white p-6 shadow-sm">
+        <h3 class="font-semibold mb-3">Notes</h3>
+        <ul class="list-disc pl-5 text-sm space-y-1 text-gray-700">
+          <li>Bring a valid ID and ensure you can access your email on the day.</li>
+          <li>Arrive 15 minutes before the meetup time.</li>
+          <li>For changes or queries, reply to the confirmation email.</li>
+        </ul>
+      </div>
+    </section>
+  {% else %}
+    <section class="rounded-2xl bg-gray-50 p-10 text-center">
+      <h1 class="text-3xl md:text-4xl font-bold tracking-tight">No active trip</h1>
+      <p class="text-gray-600 mt-2">We’ll announce the next one here soon.</p>
+      <a href="{% url 'trips:home' %}" class="underline mt-4 inline-block">Back to Home</a>
+    </section>
+  {% endif %}
+{% endblock %}

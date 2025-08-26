@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Headcount · TripTrack{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold">Headcount — {{ trip.name }}</h1>
+      <p class="text-sm text-gray-600">
+        Pickup: {{ trip.pickup_point }} · Meetup: {{ trip.meetup_time }}
+      </p>
+    </div>
+    <div class="text-sm text-gray-600">
+      Total: <b>{{ totals_all.total }}</b> ·
+      Outbound: <b>{{ totals_all.outbound }}</b> ·
+      Return: <b>{{ totals_all.return }}</b>
+    </div>
+  </div>
+
+  <!-- Mode switch -->
+  <div class="flex gap-2">
+    <a href="{% url 'trips:headcount' %}?mode=out{% if q %}&q={{ q|urlencode }}{% endif %}{% if order %}&order={{ order }}{% endif %}{% if only %}&only={{ only }}{% endif %}"
+       class="px-3 py-1.5 rounded-lg border text-sm {% if mode == 'out' %}bg-black text-white border-black{% else %}hover:bg-gray-100{% endif %}">
+      Outbound
+    </a>
+    <a href="{% url 'trips:headcount' %}?mode=ret{% if q %}&q={{ q|urlencode }}{% endif %}{% if order %}&order={{ order }}{% endif %}{% if only %}&only={{ only }}{% endif %}"
+       class="px-3 py-1.5 rounded-lg border text-sm {% if mode == 'ret' %}bg-black text-white border-black{% else %}hover:bg-gray-100{% endif %}">
+      Return
+    </a>
+  </div>
+
+  <!-- Filters -->
+  <form method="get" class="grid md:flex gap-3 items-end">
+    <input type="hidden" name="mode" value="{{ mode }}">
+    <div class="md:w-72">
+      <label class="text-xs text-gray-600">Search name / email / phone</label>
+      <input type="text" name="q" value="{{ q }}" placeholder="e.g., Riya / 98765"
+             class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/20" />
+    </div>
+    <div>
+      <label class="text-xs text-gray-600">Sort by</label>
+      <select name="order"
+              class="block w-44 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/20">
+        <option value="name_asc" {% if order == "name_asc" %}selected{% endif %}>Name A → Z</option>
+        <option value="name_desc" {% if order == "name_desc" %}selected{% endif %}>Name Z → A</option>
+      </select>
+    </div>
+    <div>
+      <label class="text-xs text-gray-600">Filter</label>
+      <select name="only"
+              class="block w-44 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/20">
+        <option value="" {% if only == "" %}selected{% endif %}>All</option>
+        <option value="unchecked" {% if only == "unchecked" %}selected{% endif %}>Only unchecked</option>
+      </select>
+    </div>
+    <div>
+      <button class="px-4 py-2 rounded-lg border hover:bg-gray-100 text-sm" type="submit">Apply</button>
+      <a href="{% url 'trips:headcount' %}?mode={{ mode }}" class="ml-2 px-4 py-2 rounded-lg border hover:bg-gray-100 text-sm">Reset</a>
+    </div>
+    <div class="md:ml-auto text-xs text-gray-600">
+      Showing <b>{{ totals_shown.total }}</b> · Checked <b>{{ totals_shown.checked }}</b>
+    </div>
+  </form>
+
+  <!-- Save checkmarks for the CURRENT mode only -->
+  <form method="post" class="space-y-6">
+    {% csrf_token %}
+
+    <section class="rounded-2xl border bg-white p-4 md:p-6">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-lg font-semibold">
+          {% if mode == 'out' %}Outbound boarding{% else %}Return boarding{% endif %}
+        </h2>
+        <div class="text-xs text-gray-600">Checked: <b>{{ totals_shown.checked }}</b> / {{ totals_shown.total }}</div>
+      </div>
+
+      <!-- Mobile cards -->
+      <div class="space-y-3 md:hidden">
+        {% for r in regs %}
+          <div class="rounded-xl border p-3">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <div class="font-medium">{{ r.full_name }}</div>
+                <div class="text-xs text-gray-500">
+                  {% if r.phone|slice:":3" == "+91" %}{{ r.phone|slice:"3:" }}{% else %}{{ r.phone }}{% endif %}
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="hidden" name="{{ mode }}-{{ r.id }}" value="off" />
+                <input id="{{ mode }}-{{ r.id }}" type="checkbox" name="{{ mode }}-{{ r.id }}" value="on"
+                       {% if mode == 'out' and r.boarded_outbound %}checked{% endif %}
+                       {% if mode == 'ret' and r.boarded_return %}checked{% endif %}
+                       class="h-5 w-5 rounded border-gray-300">
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <div class="rounded-xl border p-4 text-center text-gray-500">No participants.</div>
+        {% endfor %}
+      </div>
+
+      <!-- Desktop table -->
+      <div class="hidden md:block overflow-x-auto rounded-xl border">
+        <table class="min-w-full text-sm">
+          <thead class="bg-gray-50 text-gray-600">
+            <tr class="text-left">
+              <th class="py-2.5 px-3">Name</th>
+              <th class="py-2.5 px-3">Phone</th>
+              <th class="py-2.5 px-3 text-right">Boarded</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in regs %}
+            <tr class="border-t hover:bg-gray-50/70">
+              <td class="py-2.5 px-3">{{ r.full_name }}</td>
+              <td class="py-2.5 px-3">
+                {% if r.phone|slice:":3" == "+91" %}{{ r.phone|slice:"3:" }}{% else %}{{ r.phone }}{% endif %}
+              </td>
+              <td class="py-2.5 px-3 text-right">
+                <input type="hidden" name="{{ mode }}-{{ r.id }}" value="off" />
+                <input id="{{ mode }}-{{ r.id }}" type="checkbox" name="{{ mode }}-{{ r.id }}" value="on"
+                       {% if mode == 'out' and r.boarded_outbound %}checked{% endif %}
+                       {% if mode == 'ret' and r.boarded_return %}checked{% endif %}
+                       class="h-5 w-5 rounded border-gray-300">
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="py-3 px-3 text-center text-gray-500">No participants.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="flex items-center justify-between">
+      <p class="text-xs text-gray-500">
+        Mode: <b>{% if mode == 'out' %}Outbound{% else %}Return{% endif %}</b>.
+        Use search/filters to narrow down; only the shown list is updated on save.
+      </p>
+      <button type="submit" class="px-4 py-2 rounded-lg bg-black text-white hover:bg-black/90">
+        Save changes
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

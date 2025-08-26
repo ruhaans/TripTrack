@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Your Trip · TripTrack{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+  {% if trip %}
+    <div class="rounded-2xl border bg-white p-6">
+
+      {# Email verification banner (always visible when not verified) #}
+      {% if request.user.is_authenticated and not request.user.email_verified %}
+        <div class="mb-4 p-3 rounded bg-yellow-50 text-yellow-800 text-sm">
+          Please verify your email to join this trip.
+          <a class="underline" href="{% url 'accounts:resend-verification' %}">Resend verification email</a>
+        </div>
+      {% endif %}
+
+      {% if reg %}
+        <!-- User already joined -->
+        <h1 class="text-xl font-bold">You’re in {{ trip.name }} 🎉</h1>
+        <p class="text-sm text-gray-600 mt-1">Here are your trip details and status.</p>
+
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+          <div><span class="font-medium">Date:</span> {{ trip.date }}</div>
+          <div><span class="font-medium">Meetup:</span> {{ trip.meetup_time }}</div>
+          <div class="sm:col-span-2"><span class="font-medium">Pickup point:</span> {{ trip.pickup_point }}</div>
+          {% if trip.return_time %}
+            <div class="sm:col-span-2"><span class="font-medium">Return:</span> {{ trip.return_time }}</div>
+          {% endif %}
+        </div>
+
+        <div class="mt-6 rounded-xl border p-4 bg-gray-50">
+          <h2 class="font-semibold mb-2">Your registration</h2>
+          <ul class="text-sm space-y-1">
+            <li><span class="font-medium">Name:</span> {{ reg.full_name }}</li>
+            <li><span class="font-medium">Phone:</span> {{ reg.phone }}</li>
+            <li><span class="font-medium">DOB:</span> {{ reg.dob }}</li>
+            <li><span class="font-medium">Park choice:</span> {{ reg.get_park_choice_display }}</li>
+            <li><span class="font-medium">Status:</span> {{ reg.get_status_display }}</li>
+            {% if reg.imagica_transaction %}
+              <li><span class="font-medium">Ticket ref:</span> {{ reg.imagica_transaction }}</li>
+            {% else %}
+              <li class="text-gray-600">Ticket details will appear here after booking.</li>
+            {% endif %}
+          </ul>
+        </div>
+
+        <div class="mt-6">
+          <a href="{% url 'trips:trip-details' %}" class="text-sm underline">Learn more about this trip</a>
+        </div>
+
+      {% else %}
+        <!-- User has NOT joined yet -->
+        <h1 class="text-xl font-bold">Join {{ trip.name }}</h1>
+        <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+          <div><span class="font-medium">Date:</span> {{ trip.date }}</div>
+          <div><span class="font-medium">Meetup:</span> {{ trip.meetup_time }}</div>
+          <div class="sm:col-span-2"><span class="font-medium">Pickup point:</span> {{ trip.pickup_point }}</div>
+          {% if trip.return_time %}
+            <div class="sm:col-span-2"><span class="font-medium">Return:</span> {{ trip.return_time }}</div>
+          {% endif %}
+          <div class="sm:col-span-2">
+            <a href="{% url 'trips:trip-details' %}" class="text-sm underline">Learn more about this trip</a>
+          </div>
+        </div>
+
+        {% comment %}
+          If you have trip.is_full or trip.seats_left properties on the model,
+          you can show them here. Example:
+          {% if trip.is_full %}<p class="mt-3 text-sm text-red-700">Sorry, this trip is full.</p>{% endif %}
+        {% endcomment %}
+
+        {% if request.user.email_verified %}
+          <a href="{% url 'trips:register' %}"
+             class="inline-block mt-4 px-4 py-2 rounded-lg bg-black text-white hover:bg-black/90">
+            Join this trip
+          </a>
+        {% else %}
+          <a href="{% url 'accounts:resend-verification' %}"
+             class="inline-block mt-4 px-4 py-2 rounded-lg border hover:bg-gray-100">
+            Verify your email to join
+          </a>
+        {% endif %}
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="rounded-2xl border bg-white p-6">
+      <h1 class="text-xl font-bold">No active trip right now</h1>
+      <p class="text-sm text-gray-600">Please check back later.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
