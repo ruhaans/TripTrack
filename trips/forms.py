@@ -21,38 +21,55 @@ BASE_TEXTAREA = (
 # ---------------------------- Registration ----------------------------
 
 class RegistrationForm(forms.ModelForm):
+    first_name = forms.CharField(
+        max_length=60,
+        required=True,
+        widget=forms.TextInput(attrs={"class": BASE_INPUT, "placeholder": "Rahul"}),
+        label="First name",
+    )
+    last_name = forms.CharField(
+        max_length=60,
+        required=True,  # make it required now
+        widget=forms.TextInput(attrs={"class": BASE_INPUT, "placeholder": "Sharma"}),
+        label="Last name",
+    )
+
     class Meta:
         model = Registration
-        fields = ["full_name", "phone", "dob", "park_choice"]
+        fields = ["first_name", "last_name", "phone", "dob", "park_choice"]
         widgets = {
-            "full_name": forms.TextInput(attrs={"class": BASE_INPUT, "placeholder": "Your full name"}),
-            "phone": forms.TextInput(attrs={"class": BASE_INPUT, "placeholder": "9876543210"}),
+            "phone": forms.TextInput(attrs={
+                "class": BASE_INPUT + " phone-input",
+                "placeholder": "98765 43210",
+                "inputmode": "numeric",
+                "autocomplete": "tel",
+            }),
             "dob": forms.DateInput(attrs={"type": "date", "class": BASE_INPUT}),
             "park_choice": forms.Select(attrs={"class": BASE_INPUT}),
         }
-        labels = {
-            "full_name": "Full name",
-            "phone": "Phone number",
-            "dob": "Date of birth",
-            "park_choice": "Park choice",
-        }
 
-    # ---- validation ----
     def clean_phone(self):
         raw = (self.cleaned_data.get("phone") or "").strip()
         digits = "".join(ch for ch in raw if ch.isdigit())
         if len(digits) < 10:
-            raise ValidationError("Enter a valid phone number.")
-        return raw
+            raise ValidationError("Enter a valid phone number (10 digits).")
+        return digits
 
     def clean_dob(self):
         dob = self.cleaned_data.get("dob")
         if not dob:
-            return dob
+            raise ValidationError("Date of birth is required.")
         if dob >= timezone.localdate():
             raise ValidationError("DOB cannot be today or in the future.")
         return dob
 
+    def save(self, commit=True):
+        reg = super().save(commit=False)
+        # Join first+last into the old full_name field
+        reg.full_name = f"{self.cleaned_data['first_name']} {self.cleaned_data['last_name']}".strip()
+        if commit:
+            reg.save()
+        return reg
 
 # ------------------------------- Trip ---------------------------------
 

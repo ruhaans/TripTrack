@@ -13,7 +13,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.timezone import now
 from django.views.decorators.http import require_http_methods, require_POST
-
+from django.db import transaction
 from .forms import RegistrationAdminForm, RegistrationForm, TripForm
 from .models import Registration, Trip
 
@@ -118,7 +118,9 @@ def register(request):
     - Requires verified email
     - Prevents duplicate registration
     - Enforces capacity (race-safe)
-    - Sends confirmation emails (user + organizer best-effort)
+    - Snapshots the email used at join time
+    - Updates Profile for future prefills (does NOT alter this registration later)
+    - Sends confirmation emails (user + organizer)
     """
     # 1) Must be verified
     if not getattr(request.user, "email_verified", False):
@@ -128,12 +130,10 @@ def register(request):
     # 2) Require active trip
     trip = _active_trip()
     if not trip:
-        messages.error(
-            request, "Registrations will open soon. No active trip right now."
-        )
+        messages.error(request, "Registrations will open soon. No active trip right now.")
         return redirect("trips:home")
 
-    # 3) Already registered? → Hub
+    # 3) Already registered? → My Trips
     if Registration.objects.filter(trip=trip, user=request.user).exists():
         return redirect("trips:my")
 
@@ -141,6 +141,22 @@ def register(request):
     if _is_full(trip):
         messages.error(request, "Sorry, this trip is full.")
         return redirect("trips:home")
+
+    # Prefill from Profile / User for nicer UX
+    profile = getattr(request.user, "profile", None)
+    initial = {}
+    if profile:
+        initial = {
+            "first_name": profile.first_name or request.user.first_name or "",
+            "last_name":  profile.last_name  or request.user.last_name  or "",
+            "phone":      profile.phone_number or "",
+            "dob":        profile.date_of_birth or None,
+        }
+    else:
+        initial = {
+            "first_name": request.user.first_name or "",
+            "last_name":  request.user.last_name or "",
+        }
 
     if request.method == "POST":
         form = RegistrationForm(request.POST)
@@ -151,12 +167,44 @@ def register(request):
                 messages.error(request, "Sorry, the last seat was just taken.")
                 return redirect("trips:home")
 
-            reg = form.save(commit=False)
-            reg.trip = trip
-            reg.user = request.user
-            reg.save()
+            with transaction.atomic():
+                # Save registration (form composes full_name for us)
+                reg = form.save(commit=False)
+                reg.trip = trip
+                reg.user = request.user
+                reg.email_used = request.user.email  # snapshot the email used now
+                reg.save()
 
-            # 6) Emails: user + organizer (best-effort; don't block UX if fails)
+                # Update Profile (and mirror to User names) for future prefills
+                fn = form.cleaned_data["first_name"].strip()
+                ln = form.cleaned_data["last_name"].strip()
+                ph = form.cleaned_data["phone"]
+                db = form.cleaned_data["dob"]
+
+                changed_user_fields = []
+                if request.user.first_name != fn:
+                    request.user.first_name = fn
+                    changed_user_fields.append("first_name")
+                if request.user.last_name != ln:
+                    request.user.last_name = ln
+                    changed_user_fields.append("last_name")
+                if changed_user_fields:
+                    request.user.save(update_fields=changed_user_fields)
+
+                if profile:
+                    p_changed = False
+                    if profile.first_name != fn:
+                        profile.first_name = fn; p_changed = True
+                    if profile.last_name != ln:
+                        profile.last_name = ln; p_changed = True
+                    if ph and profile.phone_number != ph:
+                        profile.phone_number = ph; p_changed = True
+                    if db and profile.date_of_birth != db:
+                        profile.date_of_birth = db; p_changed = True
+                    if p_changed:
+                        profile.save()
+
+            # 6) Emails: user + organizer (best-effort)
             try:
                 send_mail(
                     subject=f"You're in: {trip.name}",
@@ -168,7 +216,7 @@ def register(request):
                         f"- TripTrack"
                     ),
                     from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
-                    recipient_list=[request.user.email],
+                    recipient_list=[reg.email_used or request.user.email],
                     fail_silently=False,
                 )
 
@@ -178,7 +226,7 @@ def register(request):
                         subject=f"[TripTrack] New registration: {reg.full_name} → {trip.name}",
                         message=(
                             f"Name: {reg.full_name}\n"
-                            f"Email: {request.user.email}\n"
+                            f"Email: {reg.email_used or request.user.email}\n"
                             f"Phone: {reg.phone}\n"
                             f"Park: {reg.get_park_choice_display()}\n"
                             f"DOB: {reg.dob}\n"
@@ -190,16 +238,11 @@ def register(request):
                         fail_silently=True,
                     )
             except Exception:
-                messages.warning(
-                    request, "Registered, but the email could not be sent right now."
-                )
+                messages.warning(request, "Registered, but the email could not be sent right now.")
 
-            messages.success(request, f"You’re in {trip.name}! See details below.")
+            messages.success(request, f"You’re in {trip.name}! See your trip in My Trips.")
             return redirect("trips:home")
     else:
-        initial = {
-            "full_name": "",
-        }
         form = RegistrationForm(initial=initial)
 
     return render(
@@ -207,7 +250,6 @@ def register(request):
         "trips/register.html",
         {"form": form, "title": "Register", "trip": trip},
     )
-
 
 def trip_details(request):
     """Public ‘marketing’ page for the active trip (long-form details)."""
@@ -421,7 +463,7 @@ def export_regs_csv(request):
         writer.writerow(
             [
                 r.full_name,
-                r.user.email,
+                r.email_used,
                 r.phone,
                 r.dob,
                 r.get_park_choice_display(),

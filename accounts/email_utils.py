@@ -7,7 +7,7 @@ from django.conf import settings
 from triptrack.utils import absolute_url
 from triptrack.mailer import send_email
 
-SIGN_SALT = "triptrack.email.verify"  # keep this stable
+SIGN_SALT = "triptrack.email.verify"  # keep consistent everywhere
 
 def make_verification_link(user) -> str:
     token = signing.dumps({"uid": user.pk, "email": user.email}, salt=SIGN_SALT)
@@ -15,16 +15,12 @@ def make_verification_link(user) -> str:
     return absolute_url(path)
 
 def send_verification_email(user) -> None:
-    url = make_verification_link(user)
+    if not user.email:
+        return
+    verify_url = make_verification_link(user)
+    ctx = {"username": user.username or user.email.split("@")[0], "verify_url": verify_url}
     subject = "Verify your email for TripTrack"
-
-    ctx = {
-        "username": user.username or (user.email.split("@")[0] if user.email else "there"),
-        "verify_url": url,
-    }
-
     text_body = render_to_string("emails/verify_email.txt", ctx)
     html_body = render_to_string("emails/verify_email.html", ctx)
-    # If you want replies to go somewhere human:
-    # reply_to = "info@triptrack.online"
-    send_email(subject, [user.email], text_body, html_body, reply_to=None)
+    send_email(subject=subject, to=[user.email], text_body=text_body, html_body=html_body)
+

@@ -3,65 +3,39 @@
 {% load static %}
 {% block title %}Join this trip · TripTrack{% endblock %}
 
-{# NOTE: Added a head block to style the Django-rendered form inputs for a consistent look. #}
 {% block head %}
+{# NOTE: CSS updated to target first_name and last_name #}
 <style>
-  /* Basic styling for Django-rendered text/date inputs */
-  #id_full_name, #id_dob {
-    display: block;
-    width: 100%;
-    border-radius: 0.5rem; /* rounded-lg */
-    padding: 0.625rem 0.875rem;
-    font-size: 0.875rem; /* text-sm */
-    line-height: 1.25rem;
-    transition: all .2s ease-in-out;
+  /* Basic styling for Django-rendered inputs */
+  #id_first_name, #id_last_name, #id_dob {
+    display: block; width: 100%; border-radius: 0.5rem; padding: 0.625rem 0.875rem; font-size: 0.875rem; line-height: 1.25rem; transition: all .2s ease-in-out;
   }
-  /* Custom styling for the select dropdown, including a custom arrow */
   #id_park_choice {
-    display: block;
-    width: 100%;
-    border-radius: 0.5rem; /* rounded-lg */
-    padding: 0.625rem 2.5rem 0.625rem 0.875rem;
-    font-size: 0.875rem; /* text-sm */
-    line-height: 1.25rem;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
+    display: block; width: 100%; border-radius: 0.5rem; padding: 0.625rem 2.5rem 0.625rem 0.875rem; font-size: 0.875rem; line-height: 1.25rem;
+    -webkit-appearance: none; -moz-appearance: none; appearance: none;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 0.5rem center;
-    background-repeat: no-repeat;
-    background-size: 1.5em 1.5em;
-    transition: all .2s ease-in-out;
+    background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; transition: all .2s ease-in-out;
   }
   .dark #id_park_choice {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
   }
 
   /* Light theme input styles */
-  .light #id_full_name, .light #id_dob, .light #id_park_choice, .light .phone-input {
-    background-color: #f8fafc; /* slate-50 */
-    border: 1px solid #cbd5e1; /* slate-300 */
-    color: #0f172a; /* slate-900 */
+  .light #id_first_name, .light #id_last_name, .light #id_dob, .light #id_park_choice, .light .phone-input {
+    background-color: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a;
   }
-  .light #id_full_name:focus, .light #id_dob:focus, .light #id_park_choice:focus, .light .phone-input:focus {
-    --tw-ring-color: #14b8a6; /* brand-500 */
-    border-color: #14b8a6;
-    box-shadow: 0 0 0 2px var(--tw-ring-color);
+  .light #id_first_name:focus, .light #id_last_name:focus, .light #id_dob:focus, .light #id_park_choice:focus, .light .phone-input:focus {
+    --tw-ring-color: #14b8a6; border-color: #14b8a6; box-shadow: 0 0 0 2px var(--tw-ring-color);
   }
   /* Dark theme input styles */
-  .dark #id_full_name, .dark #id_dob, .dark #id_park_choice, .dark .phone-input {
-    background-color: #1e293b; /* slate-800 */
-    border: 1px solid #475569; /* slate-600 */
-    color: #f1f5f9; /* slate-100 */
+  .dark #id_first_name, .dark #id_last_name, .dark #id_dob, .dark #id_park_choice, .dark .phone-input {
+    background-color: #1e293b; border: 1px solid #475569; color: #f1f5f9;
   }
-  .dark #id_full_name:focus, .dark #id_dob:focus, .dark #id_park_choice:focus, .dark .phone-input:focus {
-    --tw-ring-color: #2dd4bf; /* brand-400 */
-    border-color: #2dd4bf;
-    box-shadow: 0 0 0 2px var(--tw-ring-color);
+  .dark #id_first_name:focus, .dark #id_last_name:focus, .dark #id_dob:focus, .dark #id_park_choice:focus, .dark .phone-input:focus {
+    --tw-ring-color: #2dd4bf; border-color: #2dd4bf; box-shadow: 0 0 0 2px var(--tw-ring-color);
   }
 </style>
 {% endblock %}
-
 
 {% block content %}
 <div class="max-w-3xl mx-auto w-full animate-fade-in">
@@ -99,40 +73,38 @@
           </div>
         {% endif %}
 
-        <div>
-          <label for="{{ form.full_name.id_for_label }}" class="block text-sm font-medium text-slate-800 dark:text-slate-300 mb-2">
-            Full Name
-          </label>
-          {{ form.full_name }}
-          {% if form.full_name.errors %}<p class="text-xs text-red-600 dark:text-red-400 mt-1.5">{{ form.full_name.errors|striptags }}</p>{% endif %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div>
+            <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-slate-800 dark:text-slate-300 mb-2">First Name</label>
+            {{ form.first_name }}
+            {% if form.first_name.errors %}<p class="text-xs text-red-600 dark:text-red-400 mt-1.5">{{ form.first_name.errors|striptags }}</p>{% endif %}
+          </div>
+          <div>
+            <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-slate-800 dark:text-slate-300 mb-2">Last Name</label>
+            {{ form.last_name }}
+            {% if form.last_name.errors %}<p class="text-xs text-red-600 dark:text-red-400 mt-1.5">{{ form.last_name.errors|striptags }}</p>{% endif %}
+          </div>
         </div>
 
         <div>
-          <label for="{{ form.phone.id_for_label }}" class="block text-sm font-medium text-slate-800 dark:text-slate-300 mb-2">
-            Phone Number
-          </label>
+          <label for="{{ form.phone.id_for_label }}" class="block text-sm font-medium text-slate-800 dark:text-slate-300 mb-2">Phone Number</label>
           <div class="flex w-full min-w-0">
-            <span class="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-sm text-slate-600 dark:text-slate-300">
-              +91
-            </span>
+            <span class="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-sm text-slate-600 dark:text-slate-300">+91</span>
+            {# NOTE: Manually rendering the phone input to fit with the prefix #}
             <input id="{{ form.phone.id_for_label }}" type="text" name="{{ form.phone.name }}" value="{{ form.phone.value|default_if_none:'' }}" inputmode="numeric" autocomplete="tel" placeholder="98765 43210"
                    class="phone-input w-full min-w-0 rounded-r-lg px-3.5 py-2.5 text-sm outline-none" />
           </div>
-          {% if form.phone.errors %}<p class="text-xs text-red-600 dark:text-red-400 mt-1.5">{{ form.phone.errors|striptags }}</p>{% endif %}
+          {% if form.phone.errors %}<p class="text-xs text-red-600 dark:text-red-400 mt-1.5">{{ form.phone.errors|striptags }}</p>{% else %}<p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5">Enter 10 digits only. We’ll store just the digits.</p>{% endif %}
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label for="{{ form.dob.id_for_label }}" class="block text-sm font-medium text-slate-800 dark:text-slate-300 mb-2">
-              Date of Birth
-            </label>
+            <label for="{{ form.dob.id_for_label }}" class="block text-sm font-medium text-slate-800 dark:text-slate-300 mb-2">Date of Birth</label>
             {{ form.dob }}
             {% if form.dob.errors %}<p class="text-xs text-red-600 dark:text-red-400 mt-1.5">{{ form.dob.errors|striptags }}</p>{% endif %}
           </div>
           <div>
-            <label for="{{ form.park_choice.id_for_label }}" class="block text-sm font-medium text-slate-800 dark:text-slate-300 mb-2">
-              Park Choice
-            </label>
+            <label for="{{ form.park_choice.id_for_label }}" class="block text-sm font-medium text-slate-800 dark:text-slate-300 mb-2">Park Choice</label>
             {{ form.park_choice }}
             {% if form.park_choice.errors %}<p class="text-xs text-red-600 dark:text-red-400 mt-1.5">{{ form.park_choice.errors|striptags }}</p>{% endif %}
           </div>
@@ -153,11 +125,9 @@
     <aside class="lg:sticky lg:top-24 self-start">
       <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-5 shadow-xl dark:shadow-2xl">
         <h2 class="text-base font-semibold text-slate-900 dark:text-slate-100">Trip Summary</h2>
-
         <div class="mt-4 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
           <img src="{% static 'img/imagica-banner.png' %}" alt="{{ trip.name }}" class="w-full h-40 object-cover">
         </div>
-
         <dl class="mt-4 space-y-2 text-sm">
           <div class="flex justify-between gap-3"><dt class="text-slate-600 dark:text-slate-400">Date</dt><dd class="font-semibold text-slate-900 dark:text-white">{{ trip.date|date:"D, d M Y" }}</dd></div>
           <div class="flex justify-between gap-3"><dt class="text-slate-600 dark:text-slate-400">Meetup</dt><dd class="font-semibold text-slate-900 dark:text-white">{{ trip.meetup_time|time:"g:i A" }}</dd></div>
@@ -167,7 +137,6 @@
             <dd class="font-semibold text-brand-600 dark:text-brand-400">from ₹1199</dd>
           </div>
         </dl>
-        
         <p class="mt-4 text-xs text-slate-500 dark:text-slate-400">
           We’ll email your e-ticket and final trip details once the group booking is confirmed.
         </p>

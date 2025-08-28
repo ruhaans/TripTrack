@@ -55,23 +55,27 @@ class Registration(models.Model):
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="registrations")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="registrations")
 
+    # SNAPSHOT FIELDS (don’t auto-update)
     full_name = models.CharField(max_length=120)
     phone = models.CharField(max_length=20)
     dob = models.DateField()
     park_choice = models.CharField(max_length=10, choices=PARK_CHOICES)
     status = models.CharField(max_length=10, choices=STATUS, default="pending")
 
+    # NEW: email snapshot at time of registration
+    email_used = models.EmailField(null=True, blank=True)
+
     imagica_transaction = models.CharField(max_length=120, blank=True)
     boarded_outbound = models.BooleanField(default=False)
     boarded_return = models.BooleanField(default=False)
 
-    price = models.PositiveIntegerField(null=True, blank=True)  # ₹ optional
+    price = models.PositiveIntegerField(null=True, blank=True)
     gift_code = models.CharField(max_length=50, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = [("trip", "user")]  # one seat per user on a trip
+        unique_together = [("trip", "user")]
         ordering = ["full_name"]
         indexes = [
             models.Index(fields=["trip", "full_name"]),

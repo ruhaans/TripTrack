@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from django.conf import settings
 from django.contrib import messages
+from django import forms
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required
 from django.core import signing
@@ -69,60 +70,89 @@ def signup(request):
 
 
 def verify_email(request, token: str):
-    """
-    Verify email from the signed token. Link is valid for 3 days.
-    If user is logged in, go to My Trip; else send them to Login.
-    """
     try:
-        data = signing.loads(token, salt=SIGN_SALT, max_age=60 * 60 * 24 * 3)
+        data = signing.loads(token, salt=SIGN_SALT, max_age=60*60*24*3)
         uid = data.get("uid")
-        email = data.get("email")
+        email_in_token = (data.get("email") or "").strip().lower()
     except signing.BadSignature:
-        # Friendlier UX than a raw 400: show a small template later if you like
         return HttpResponseBadRequest("Invalid or expired verification link.")
 
     try:
-        user = User.objects.get(pk=uid, email=email)
+        user = User.objects.get(pk=uid)
     except User.DoesNotExist:
-        return HttpResponseBadRequest("User not found for this token.")
+        return HttpResponseBadRequest("User not found.")
 
-    if not getattr(user, "email_verified", False):
-        user.email_verified = True
-        user.save(update_fields=["email_verified"])
-        messages.success(request, "Email verified successfully! You can now join the trip.")
-    else:
-        messages.info(request, "Your email is already verified.")
+    if user.email.strip().lower() == email_in_token:
+        if not user.email_verified:
+            user.email_verified = True
+            user.save(update_fields=["email_verified"])
+            messages.success(request, "Email verified successfully!")
+        else:
+            messages.info(request, "Your email is already verified.")
+        return redirect("trips:home" if request.user.is_authenticated else "accounts:login")
 
-    # If they’re logged in on this browser, take them to their hub; otherwise to login.
-    return redirect("trips:home" if request.user.is_authenticated else "accounts:login")
+    return HttpResponseBadRequest("Verification link does not match.")
+
 
 
 # -------------------- Resend Verification (UX page) --------------------
+
+class InlineEmailChangeForm(forms.Form):
+    new_email = forms.EmailField(label="New email")
+
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def resend_verification(request):
     """
-    UX page for resending the verification email.
-
-    - GET  -> render a page with a button (disabled if already verified)
-    - POST -> send the email (unless already verified), then redisplay page with a message
+    One page that supports:
+    - Resending verification to the current email
+    - Updating the (unverified) email and sending a new link
     """
     user = request.user
+    is_verified = bool(getattr(user, "email_verified", False))
+
+    # Pre-fill the inline form with the current email
+    email_form = InlineEmailChangeForm(
+        initial={"new_email": user.email},
+        data=request.POST or None,
+    )
 
     if request.method == "POST":
-        if getattr(user, "email_verified", False):
+        action = request.POST.get("action", "resend")
+
+        # If already verified, nothing to do here.
+        if is_verified:
             messages.info(request, "Your email is already verified.")
             return redirect("accounts:resend-verification")
 
-        _send_verification_email(request, user)
-        messages.success(request, f"Verification email sent to {user.email}. Check your inbox.")
-        return redirect("accounts:resend-verification")
+        if action == "update_email":
+            # Validate and update the email, then send a new link
+            if email_form.is_valid():
+                new_email = email_form.cleaned_data["new_email"].strip().lower()
 
-    # GET: render the page
+                # Enforce uniqueness
+                if User.objects.filter(email__iexact=new_email).exclude(pk=user.pk).exists():
+                    email_form.add_error("new_email", "This email is already in use.")
+                else:
+                    user.email = new_email
+                    user.email_verified = False
+                    user.save(update_fields=["email", "email_verified"])
+
+                    send_verification_email(user)
+                    messages.success(request, f"Email updated. Verification sent to {new_email}.")
+                    return redirect("accounts:resend-verification")
+
+        else:  # action == "resend" (default)
+            send_verification_email(user)
+            messages.success(request, f"Verification email sent to {user.email}.")
+            return redirect("accounts:resend-verification")
+
+    # GET or invalid POST -> render page
     context = {
         "email": user.email,
-        "is_verified": bool(getattr(user, "email_verified", False)),
+        "is_verified": is_verified,
+        "email_form": email_form,
     }
     return render(request, "accounts/resend_verification.html", context)
 

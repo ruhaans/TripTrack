@@ -2,6 +2,18 @@
 {% extends "base.html" %}
 {% block title %}Verify your email · TripTrack{% endblock %}
 
+{% block head %}
+<style>
+  #id_new_email {
+    display: block; width: 100%; border-radius: 0.5rem; padding: 0.625rem 0.875rem; font-size: 0.875rem; line-height: 1.25rem; transition: all .2s ease-in-out;
+  }
+  .light #id_new_email { background-color: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; }
+  .light #id_new_email:focus { --tw-ring-color: #14b8a6; border-color: #14b8a6; box-shadow: 0 0 0 2px var(--tw-ring-color); }
+  .dark #id_new_email { background-color: #1e293b; border: 1px solid #475569; color: #f1f5f9; }
+  .dark #id_new_email:focus { --tw-ring-color: #2dd4bf; border-color: #2dd4bf; box-shadow: 0 0 0 2px var(--tw-ring-color); }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="flex items-center justify-center min-h-[60vh] py-12 px-4 animate-fade-in">
   <section class="mx-auto w-full max-w-md text-center">
@@ -21,49 +33,53 @@
       </div>
 
       <h1 class="text-2xl sm:text-3xl font-heading font-semibold text-slate-900 dark:text-slate-100">
-        {% if is_verified %}
-          Email Verified
-        {% else %}
-          Verify Your Email
-        {% endif %}
+        {% if is_verified %}Email Verified{% else %}Verify Your Email{% endif %}
       </h1>
       
-      <p class="text-slate-600 dark:text-slate-400 mt-2">
-        Email on your account: <strong class="text-slate-800 dark:text-slate-200">{{ email }}</strong>
-      </p>
-
-      <div class="mt-4">
-        {% if is_verified %}
-          <p class="text-sm text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-500/30 rounded-lg px-4 py-3">
-            Your email is already verified. You're all set!
-          </p>
-        {% else %}
-          <p class="text-sm text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-500/30 rounded-lg px-4 py-3">
-            A verification link is required to secure your account and join trips.
-          </p>
-        {% endif %}
-      </div>
-
-      <form method="post" class="mt-4">
-        {% csrf_token %}
-        <button
-          type="submit"
-          class="w-full py-3 rounded-xl text-sm font-semibold tween
-                 {% if is_verified %}
-                   bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed
-                 {% else %}
-                   bg-amber-500 hover:bg-amber-600 text-white shadow-button
-                 {% endif %}"
-          {% if is_verified %}disabled{% endif %}
-        >
-          {% if is_verified %}All Verified{% else %}Send Verification Email{% endif %}
-        </button>
-      </form>
-
-      {% if not is_verified %}
-        <div class="mt-4 text-xs text-slate-500 dark:text-slate-400">
-          <p>Didn’t receive the email? Check your spam folder, or try sending it again.</p>
+      {% if is_verified %}
+        <p class="text-slate-600 dark:text-slate-400 mt-2">
+          Your email <strong class="text-slate-800 dark:text-slate-200">{{ email }}</strong> is verified.
+        </p>
+        <div class="mt-4 text-sm text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-500/30 rounded-lg px-4 py-3">
+          You're all set to join trips!
         </div>
+      {% else %}
+        <form method="post" class="space-y-4">
+          {% csrf_token %}
+          
+          {# NOTE: This block shows the current email and a "Change" button. It's hidden if there's a form error. #}
+          <div id="email-display-view" class="mt-4 text-left {% if email_form.errors %}hidden{% endif %}">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Your current email</label>
+            <div class="mt-1 flex items-center justify-between gap-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3">
+              <p class="font-semibold text-slate-800 dark:text-slate-200 break-all">{{ email }}</p>
+              <button type="button" id="edit-email-btn" class="text-sm font-semibold text-brand-600 dark:text-brand-400 hover:underline flex-shrink-0">Change</button>
+            </div>
+          </div>
+
+          {# NOTE: This block is hidden by default and appears when "Change" is clicked or if there are form errors. #}
+          <div id="email-edit-view" class="text-left space-y-3 {% if not email_form.errors %}hidden{% endif %}">
+            <div>
+              <label for="{{ email_form.new_email.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300">New email address</label>
+              <div class="mt-1">{{ email_form.new_email }}</div>
+              {% if email_form.new_email.errors %}<p class="text-xs text-red-600 dark:text-red-400 mt-1.5">{{ email_form.new_email.errors|striptags }}</p>{% endif %}
+            </div>
+            <div class="flex items-center gap-3">
+              <button type="button" id="cancel-edit-btn" class="w-full py-3 rounded-xl border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 text-sm font-semibold tween">Cancel</button>
+              {# NOTE: This button is now styled with the primary brand color #}
+              <button type="submit" name="action" value="update_email" class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 text-white text-sm font-semibold shadow-button tween">
+                Update & Resend
+              </button>
+            </div>
+          </div>
+          
+          {# NOTE: This block for the main resend button is now also controlled by JS #}
+          <div id="resend-view" class="!mt-5 {% if email_form.errors %}hidden{% endif %}">
+            <button type="submit" name="action" value="resend" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold shadow-button tween">
+              Resend Verification Email
+            </button>
+            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Didn’t receive it? Check your spam folder first.</p>
+          </div>
+        </form>
       {% endif %}
     </div>
 
@@ -74,4 +90,38 @@
     </div>
   </section>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{% if not is_verified %}
+{# NOTE: Javascript updated to handle the new UX flow #}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const displayView = document.getElementById('email-display-view');
+    const editView = document.getElementById('email-edit-view');
+    const resendView = document.getElementById('resend-view');
+    const editBtn = document.getElementById('edit-email-btn');
+    const cancelBtn = document.getElementById('cancel-edit-btn');
+
+    function showEditView() {
+      displayView.classList.add('hidden');
+      resendView.classList.add('hidden');
+      editView.classList.remove('hidden');
+    }
+
+    function showDisplayView() {
+      displayView.classList.remove('hidden');
+      resendView.classList.remove('hidden');
+      editView.classList.add('hidden');
+    }
+
+    if (editBtn) {
+      editBtn.addEventListener('click', showEditView);
+    }
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', showDisplayView);
+    }
+  });
+</script>
+{% endif %}
 {% endblock %}
