@@ -1,149 +1,131 @@
+{# templates/manage/dashboard.html #}
 {% extends "base.html" %}
 {% block title %}Organizer · TripTrack{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto space-y-8">
+<div class="max-w-7xl mx-auto space-y-8 animate-fade-in">
 
-  <!-- Header / Trip picker -->
-  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+  <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-bold">Organizer</h1>
-      <p class="text-sm text-gray-600">Manage trips, registrations, payments, and headcount.</p>
+      <h1 class="text-3xl font-heading font-bold text-slate-900 dark:text-slate-100">Organizer Dashboard</h1>
+      <p class="mt-1 text-slate-600 dark:text-slate-400">Manage trips, registrations, payments, and headcount.</p>
     </div>
-    <div class="flex flex-wrap gap-2">
-      <a href="{% url 'trips:trip-list' %}" class="px-3 py-2 rounded-lg border hover:bg-gray-100 text-sm">All trips</a>
-      <a href="{% url 'trips:trip-create' %}" class="px-3 py-2 rounded-lg bg-black text-white hover:bg-black/90 text-sm">Create trip</a>
+    <div class="flex flex-wrap gap-3 flex-shrink-0">
+      <a href="{% url 'trips:trip-list' %}" class="inline-flex items-center justify-center rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 px-4 py-2.5 font-semibold text-sm tween">All Trips</a>
+      <a href="{% url 'trips:trip-create' %}" class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 text-white px-5 py-2.5 font-semibold text-sm shadow-button hover:shadow-lg hover:-translate-y-0.5 tween">Create New Trip</a>
     </div>
-  </div>
+  </header>
 
-  <!-- Active trip summary -->
-  <div class="rounded-2xl border bg-white p-6">
-    {% if trip %}
-      <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-        <div>
-          <div class="flex items-center gap-2">
-            <h2 class="text-lg font-semibold">{{ trip.name }}</h2>
-            <span class="inline-flex items-center text-xs px-2 py-0.5 rounded bg-green-100 text-green-700 border border-green-200">Active</span>
+  {% if trip %}
+    {# NOTE: Added a flex container to reorder sections on mobile vs. desktop #}
+    <div class="flex flex-col gap-8">
+
+      <section class="order-1 lg:order-2">
+        <h2 class="text-xl font-heading font-semibold text-slate-800 dark:text-slate-100 mb-4">Quick Actions</h2>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <a href="{% url 'trips:manage-regs' %}" class="group block rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-4 hover:border-brand-500/50 dark:hover:border-brand-500 hover:shadow-lg hover:-translate-y-1 tween"><div class="flex items-center gap-4"><div class="h-11 w-11 rounded-lg bg-brand-100 dark:bg-brand-900/50 text-brand-600 dark:text-brand-300 grid place-items-center shrink-0"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m10-6.26a4 4 0 11-8 0 4 4 0 018 0zM7 7a4 4 0 108 0"/></svg></div><div><div class="font-semibold text-slate-900 dark:text-white">Manage Registrations</div><div class="text-xs text-slate-600 dark:text-slate-400">Approve payments, add ticket refs</div></div></div></a>
+          <a href="{% url 'trips:headcount' %}" class="group block rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-4 hover:border-brand-500/50 dark:hover:border-brand-500 hover:shadow-lg hover:-translate-y-1 tween"><div class="flex items-center gap-4"><div class="h-11 w-11 rounded-lg bg-brand-100 dark:bg-brand-900/50 text-brand-600 dark:text-brand-300 grid place-items-center shrink-0"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div><div><div class="font-semibold text-slate-900 dark:text-white">Take Headcount</div><div class="text-xs text-slate-600 dark:text-slate-400">Outbound & return checklist</div></div></div></a>
+          <a href="{% url 'trips:export-regs-csv' %}" class="group block rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-4 hover:border-brand-500/50 dark:hover:border-brand-500 hover:shadow-lg hover:-translate-y-1 tween"><div class="flex items-center gap-4"><div class="h-11 w-11 rounded-lg bg-brand-100 dark:bg-brand-900/50 text-brand-600 dark:text-brand-300 grid place-items-center shrink-0"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"/></svg></div><div><div class="font-semibold text-slate-900 dark:text-white">Export CSV</div><div class="text-xs text-slate-600 dark:text-slate-400">Download roster for this trip</div></div></div></a>
+          <a href="{% url 'trips:trip-edit' trip.pk %}" class="group block rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-4 hover:border-brand-500/50 dark:hover:border-brand-500 hover:shadow-lg hover:-translate-y-1 tween"><div class="flex items-center gap-4"><div class="h-11 w-11 rounded-lg bg-brand-100 dark:bg-brand-900/50 text-brand-600 dark:text-brand-300 grid place-items-center shrink-0"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></div><div><div class="font-semibold text-slate-900 dark:text-white">Edit Trip Details</div><div class="text-xs text-slate-600 dark:text-slate-400">Update dates, times, etc.</div></div></div></a>
+      </div>
+    </section>
+
+      <section class="order-2 lg:order-1 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-6 shadow-xl dark:shadow-2xl">
+        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+          <div class="space-y-1">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100">{{ trip.name }}</h2>
+              <span class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 font-medium">
+                <span class="h-2 w-2 rounded-full bg-emerald-500"></span> Active
+              </span>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-400">
+              📅 {{ trip.date|date:"D, d M Y" }} · 📍 {{ trip.pickup_point }}
+            </p>
           </div>
-          <p class="text-sm text-gray-600 mt-1">
-            📅 {{ trip.date }} · 🕘 {{ trip.meetup_time }} · 📍 {{ trip.pickup_point }}
-          </p>
+          <div class="text-sm text-slate-600 dark:text-slate-400 flex-shrink-0">
+            Capacity: <span class="font-semibold text-slate-900 dark:text-white">{{ stats.total|default:0 }} / {{ trip.capacity }}</span>
+            {% if stats.seats_left == 0 %}
+              <span class="ml-2 inline-flex items-center rounded-md bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 border border-red-200 dark:border-red-500/30 px-2 py-0.5 text-xs font-semibold">Full</span>
+            {% elif stats.seats_left <= 5 %}
+              <span class="ml-2 inline-flex items-center rounded-md bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 px-2 py-0.5 text-xs font-semibold">{{ stats.seats_left }} left</span>
+            {% endif %}
+          </div>
         </div>
-        <div class="text-sm text-gray-600">
-          Capacity: <span class="font-medium">{{ trip.capacity }}</span>
-          {% if stats.seats_left == 0 %}<span class="ml-2 text-red-600 font-medium">Full</span>{% endif %}
-        </div>
-      </div>
 
-      <!-- KPIs -->
-      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-        <div class="rounded-xl border p-4">
-          <div class="text-2xl font-bold">{{ stats.total|default:0 }}</div>
-          <div class="text-xs text-gray-600">Registered</div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+          <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4"><div class="text-sm font-medium text-slate-500 dark:text-slate-400">Registered</div><div class="mt-1 text-3xl font-bold text-slate-900 dark:text-white">{{ stats.total|default:0 }}</div></div>
+          <div class="rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-900/30 p-4"><div class="text-sm font-medium text-emerald-800 dark:text-emerald-400">Paid</div><div class="mt-1 text-3xl font-bold text-emerald-600 dark:text-emerald-300">{{ stats.paid|default:0 }}</div></div>
+          <div class="rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-900/30 p-4"><div class="text-sm font-medium text-amber-800 dark:text-amber-400">Pending</div><div class="mt-1 text-3xl font-bold text-amber-600 dark:text-amber-300">{{ stats.pending|default:0 }}</div></div>
+          <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4"><div class="text-sm font-medium text-slate-500 dark:text-slate-400">Seats Left</div><div class="mt-1 text-3xl font-bold text-slate-900 dark:text-white">{{ stats.seats_left|default:trip.capacity }}</div></div>
         </div>
-        <div class="rounded-xl border p-4">
-          <div class="text-2xl font-bold text-green-600">{{ stats.paid|default:0 }}</div>
-          <div class="text-xs text-gray-600">Paid</div>
-        </div>
-        <div class="rounded-xl border p-4">
-          <div class="text-2xl font-bold text-amber-600">{{ stats.pending|default:0 }}</div>
-          <div class="text-xs text-gray-600">Pending</div>
-        </div>
-        <div class="rounded-xl border p-4">
-          <div class="text-2xl font-bold">{{ stats.seats_left|default:trip.capacity }}</div>
-          <div class="text-xs text-gray-600">Seats left</div>
-        </div>
-      </div>
 
-      <!-- Seats filled progress -->
-      {% if stats.filled_pct is not None %}
-      <div class="mt-4">
-        <div class="flex items-center justify-between text-xs text-gray-600 mb-1">
-          <span>Seats filled</span>
-          <span>{{ stats.filled_pct }}%</span>
+        {% if stats.filled_pct is not None %}
+        <div class="mt-4">
+          <div class="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400 mb-1">
+            <span>Seats Filled</span>
+            <span class="font-semibold text-slate-900 dark:text-white">{{ stats.filled_pct }}%</span>
+          </div>
+          <div class="h-2.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden"><div class="h-full bg-gradient-to-r from-brand-500 to-lagoon" style="width: {{ stats.filled_pct }}%;"></div></div>
         </div>
-        <div class="h-2 rounded-full bg-gray-200 overflow-hidden">
-          <div class="h-full bg-black" style="width: {{ stats.filled_pct }}%;"></div>
-        </div>
-      </div>
-      {% endif %}
+        {% endif %}
+      </section>
 
-      <!-- Quick actions -->
-      <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <a href="{% url 'trips:manage-regs' %}" class="block rounded-xl border bg-white p-4 hover:shadow-sm">
-          <div class="font-semibold">Manage registrations</div>
-          <div class="text-xs text-gray-600">Approve payments, add ticket refs</div>
-        </a>
-        <a href="{% url 'trips:headcount' %}" class="block rounded-xl border bg-white p-4 hover:shadow-sm">
-          <div class="font-semibold">Headcount</div>
-          <div class="text-xs text-gray-600">Outbound & return checklist</div>
-        </a>
-        <a href="{% url 'trips:export-regs-csv' %}" class="block rounded-xl border bg-white p-4 hover:shadow-sm">
-          <div class="font-semibold">Export CSV</div>
-          <div class="text-xs text-gray-600">Download current trip roster</div>
-        </a>
-        <a href="{% url 'trips:trip-list' %}" class="block rounded-xl border bg-white p-4 hover:shadow-sm">
-          <div class="font-semibold">Trips</div>
-          <div class="text-xs text-gray-600">Create, edit, activate</div>
-        </a>
-      </div>
+    </div> {# End of flex container #}
 
-      <!-- Recent registrations -->
-      {% if recent_regs %}
-      <div class="mt-8">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="font-semibold">Recent registrations</h3>
-          <a href="{% url 'trips:manage-regs' %}" class="text-sm underline">View all</a>
-        </div>
-        <div class="overflow-x-auto rounded-xl border">
-          <table class="min-w-full text-sm">
-            <thead class="bg-gray-50 text-gray-600">
-              <tr>
-                <th class="text-left px-4 py-2">Name</th>
-                <th class="text-left px-4 py-2">Email</th>
-                <th class="text-left px-4 py-2">Phone</th>
-                <th class="text-left px-4 py-2">Park</th>
-                <th class="text-left px-4 py-2">Status</th>
-                <th class="text-left px-4 py-2">Created</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for r in recent_regs %}
-              <tr class="border-t">
-                <td class="px-4 py-2">{{ r.full_name }}</td>
-                <td class="px-4 py-2">{{ r.user.email }}</td>
-                <td class="px-4 py-2">{{ r.phone }}</td>
-                <td class="px-4 py-2">{{ r.get_park_choice_display }}</td>
-                <td class="px-4 py-2">
-                  {% if r.status == "paid" %}
-                    <span class="text-xs rounded bg-green-100 text-green-700 px-2 py-0.5 border border-green-200">Paid</span>
-                  {% elif r.status == "pending" %}
-                    <span class="text-xs rounded bg-amber-100 text-amber-800 px-2 py-0.5 border border-amber-200">Pending</span>
-                  {% else %}
-                    <span class="text-xs rounded bg-gray-200 text-gray-700 px-2 py-0.5">Cancelled</span>
-                  {% endif %}
-                </td>
-                <td class="px-4 py-2">{{ r.created_at|date:"M j, H:i" }}</td>
-              </tr>
-              {% empty %}
-              <tr><td class="px-4 py-3 text-gray-600" colspan="6">No recent registrations.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      {% endif %}
 
-    {% else %}
-      <div class="flex items-center justify-between">
-        <div>
-          <div class="font-semibold mb-1">No active trip</div>
-          <p class="text-sm text-gray-600">Create a new trip to get started.</p>
-        </div>
-        <a href="{% url 'trips:trip-create' %}" class="px-4 py-2 rounded-lg bg-black text-white hover:bg-black/90">Create a trip</a>
+    {% if recent_regs %}
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-heading font-semibold text-slate-800 dark:text-slate-100">Recent Registrations</h2>
+        <a href="{% url 'trips:manage-regs' %}" class="text-sm font-semibold text-brand-600 dark:text-brand-400 hover:underline">View all</a>
       </div>
+      <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 shadow-xl dark:shadow-2xl">
+        <table class="min-w-full text-sm">
+          <thead class="bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+            <tr>
+              <th class="text-left px-4 py-3 font-semibold">Name</th>
+              <th class="text-left px-4 py-3 font-semibold">Email</th>
+              <th class="text-left px-4 py-3 font-semibold">Park</th>
+              <th class="text-left px-4 py-3 font-semibold">Status</th>
+              <th class="text-left px-4 py-3 font-semibold">Registered At</th>
+            </tr>
+          </thead>
+          <tbody class="text-slate-800 dark:text-slate-200">
+            {% for r in recent_regs %}
+            <tr class="border-t border-slate-200 dark:border-slate-700">
+              <td class="px-4 py-3 font-medium text-slate-900 dark:text-white">{{ r.full_name }}</td>
+              <td class="px-4 py-3">{{ r.user.email }}</td>
+              <td class="px-4 py-3">{{ r.get_park_choice_display }}</td>
+              <td class="px-4 py-3">
+                {% if r.status == "paid" %}<span class="text-xs font-medium rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 px-3 py-1">Paid</span>
+                {% elif r.status == "pending" %}<span class="text-xs font-medium rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 px-3 py-1">Pending</span>
+                {% else %}<span class="text-xs font-medium rounded-full bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300 px-3 py-1">Cancelled</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-3">{{ r.created_at|date:"M j, g:i A" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
     {% endif %}
-  </div>
+
+  {% else %}
+    <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-8 flex flex-col sm:flex-row items-center justify-center text-center sm:text-left gap-6 shadow-xl dark:shadow-2xl">
+      <div class="h-16 w-16 rounded-2xl bg-slate-100 dark:bg-slate-800 grid place-items-center text-slate-700 dark:text-slate-300 shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7h4l2 2h12v8a2 2 0 01-2 2H3z"/></svg>
+      </div>
+      <div>
+        <div class="text-xl font-semibold text-slate-900 dark:text-slate-100">No active trip</div>
+        <p class="text-slate-600 dark:text-slate-400 mt-1">Create and activate a new trip to see the dashboard.</p>
+      </div>
+      <a href="{% url 'trips:trip-create' %}" class="sm:ml-auto shrink-0 px-5 py-3 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 text-white font-semibold shadow-button hover:shadow-lg hover:-translate-y-0.5 tween">
+        Create a Trip
+      </a>
+    </div>
+  {% endif %}
 
 </div>
 {% endblock %}

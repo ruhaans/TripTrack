@@ -1,0 +1,127 @@
+{# templates/accounts/login.html #}
+{% extends "base.html" %}
+{% block title %}Log in · TripTrack{% endblock %}
+
+{# NOTE: Added a head block to style the form inputs without modifying your forms.py file. #}
+{% block head %}
+<style>
+  /* Basic styling for Django-rendered form inputs */
+  #id_username, #id_password {
+    display: block;
+    width: 100%;
+    border-radius: 0.5rem; /* rounded-lg */
+    padding: 0.625rem 0.875rem; /* py-2.5 px-3.5 */
+    font-size: 0.875rem; /* text-sm */
+    line-height: 1.25rem;
+    transition: all .2s ease-in-out;
+  }
+  /* Light theme input styles */
+  .light #id_username, .light #id_password {
+    background-color: #f8fafc; /* slate-50 */
+    border: 1px solid #cbd5e1; /* slate-300 */
+    color: #0f172a; /* slate-900 */
+  }
+  .light #id_username:focus, .light #id_password:focus {
+    --tw-ring-color: #14b8a6; /* brand-500 */
+    border-color: #14b8a6; /* brand-500 */
+    box-shadow: 0 0 0 2px var(--tw-ring-color);
+  }
+  /* Dark theme input styles */
+  .dark #id_username, .dark #id_password {
+    background-color: #1e293b; /* slate-800 */
+    border: 1px solid #475569; /* slate-600 */
+    color: #f1f5f9; /* slate-100 */
+  }
+  .dark #id_username:focus, .dark #id_password:focus {
+    --tw-ring-color: #2dd4bf; /* brand-400 */
+    border-color: #2dd4bf; /* brand-400 */
+    box-shadow: 0 0 0 2px var(--tw-ring-color);
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="w-full animate-fade-in">
+  <div class="flex items-center justify-center min-h-[70vh] py-12 px-4">
+    <section class="mx-auto w-full max-w-md">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl sm:text-4xl font-heading font-semibold text-slate-800 dark:text-slate-100">Welcome Back</h1>
+        <p class="text-sm text-slate-600 dark:text-slate-400 mt-2">Log in to your account to continue.</p>
+      </div>
+
+      <form method="post" novalidate
+            class="bg-white dark:bg-slate-800/50 rounded-2xl shadow-xl dark:shadow-2xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8">
+        {% csrf_token %}
+        {% if next %}
+          <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        {# Non-field errors (e.g., bad credentials) #}
+        {% if form.non_field_errors %}
+          <div class="mb-4 text-sm text-red-800 dark:text-red-300 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-lg px-4 py-3">
+            {% for err in form.non_field_errors %}{{ err }}{% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="mb-4">
+          <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Username
+          </label>
+          {{ form.username }}
+          {% for err in form.username.errors %}
+            <p class="text-xs text-red-600 dark:text-red-400 mt-1.5">{{ err }}</p>
+          {% endfor %}
+        </div>
+
+        <div class="mb-5">
+          <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Password
+          </label>
+          <div class="relative">
+            {{ form.password }}
+            {# NOTE: Replaced text with SVG icons for better UX #}
+            <button type="button" id="togglePw" class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 tween" aria-label="Toggle password visibility">
+              <svg id="pw-icon-hide" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.243 4.243L6.228 6.228" /></svg>
+              <svg id="pw-icon-show" class="h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.432 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            </button>
+          </div>
+          {% for err in form.password.errors %}
+            <p class="text-xs text-red-600 dark:text-red-400 mt-1.5">{{ err }}</p>
+          {% endfor %}
+        </div>
+
+        <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 text-white font-semibold shadow-button hover:shadow-lg hover:-translate-y-0.5 tween focus-ring">
+          Log in
+        </button>
+
+        <p class="text-sm text-slate-600 dark:text-slate-400 mt-6 text-center">
+          New here?
+          <a href="{% url 'accounts:signup' %}" class="font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 underline underline-offset-2 tween">
+            Create an account
+          </a>
+        </p>
+      </form>
+    </section>
+  </div>
+</div>
+
+{# NOTE: Updated JS to handle SVG icon visibility #}
+<script>
+  (function () {
+    const btn = document.getElementById('togglePw');
+    const input = document.getElementById('{{ form.password.id_for_label }}');
+    const iconShow = document.getElementById('pw-icon-show');
+    const iconHide = document.getElementById('pw-icon-hide');
+    
+    if (!btn || !input || !iconShow || !iconHide) return;
+    
+    btn.addEventListener('click', () => {
+      const isPasswordType = input.getAttribute('type') === 'password';
+      input.setAttribute('type', isPasswordType ? 'text' : 'password');
+      iconShow.classList.toggle('hidden', !isPasswordType);
+      iconHide.classList.toggle('hidden', isPasswordType);
+    });
+  })();
+</script>
+{% endblock %}

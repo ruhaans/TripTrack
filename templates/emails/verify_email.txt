@@ -1,0 +1,9 @@
+Hi {{ username }},
+
+Please verify your email by clicking this link:
+{{ verify_url }}
+
+If you didn't sign up, you can ignore this message.
+
+— TripTrack
+This is an automated email. Please do not reply to this address.

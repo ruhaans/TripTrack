@@ -3,131 +3,190 @@
 {% block title %}{{ trip.name }} · Details · TripTrack{% endblock %}
 
 {% block content %}
-  {% if trip %}
-    <!-- TOP: image card + key facts (mirrors home style) -->
-    <section class="grid md:grid-cols-2 gap-8 items-center mb-10">
-      <!-- Square image as a card -->
-      <div class="flex justify-center">
-        {# Change the src to your real static file or add a banner field later #}
-        <img src="{% static 'img/imagica-banner.png' %}"
-             alt="{{ trip.name }}"
-             class="rounded-2xl shadow-lg w-72 h-72 object-cover">
-      </div>
+{% if trip %}
 
-      <!-- Trip summary -->
-      <div>
-        <h1 class="text-3xl md:text-4xl font-bold tracking-tight">
-          {{ trip.name }}
-        </h1>
-        <p class="text-gray-600 mt-2">All the info you need before you join.</p>
+  <header class="relative rounded-2xl md:rounded-3xl overflow-hidden mb-8 h-64 md:h-80 flex items-end p-6 md:p-8 text-white bg-slate-900">
+    <div class="absolute inset-0 z-0">
+      <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-black/0 z-10"></div>
+      <img src="{% static 'img/imagica-banner.png' %}" alt="{{ trip.name }}" class="w-full h-full object-cover">
+    </div>
+    <div class="relative z-20 animate-fade-in">
+      <nav class="text-sm text-slate-300">
+        <a href="{% url 'trips:home' %}" class="hover:underline">Home</a>
+        <span class="mx-2">/</span>
+        <span class="font-medium text-white">Trip details</span>
+      </nav>
+      <h1 class="mt-2 text-3xl md:text-4xl font-heading font-bold text-white tracking-tight">
+        {{ trip.name }}
+      </h1>
+    </div>
+  </header>
 
-        <div class="mt-5 grid gap-2 text-sm">
-          <div><span class="font-medium">📅 Date:</span> {{ trip.date }}</div>
-          <div><span class="font-medium">🕘 Meetup:</span> {{ trip.meetup_time }}</div>
-          {% if trip.return_time %}
-            <div><span class="font-medium">↩ Return:</span> {{ trip.return_time }}</div>
+  <div class="grid lg:grid-cols-[1fr,380px] gap-8">
+    
+    <div class="space-y-10 animate-fade-in">
+      
+      <section id="overview">
+        <div class="prose prose-slate dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-relaxed">
+          <p class="text-lg">
+            Plan, ride, and enjoy a stress-free day. Below is the full itinerary and all the details you need to know for this unforgettable adventure.
+          </p>
+          {% if trip.details %}
+            {{ trip.details|linebreaks }}
           {% endif %}
-          <div><span class="font-medium">📍 Pickup:</span> {{ trip.pickup_point }}</div>
-          <div>
-            <span class="font-medium">🪑 Seats:</span> {{ trip.capacity }}
-            {% if trip.seats_left %} ({{ trip.seats_left }} left){% endif %}
-          </div>
-        </div>
-
-        <!-- CTAs -->
-        <div class="mt-6 flex flex-wrap gap-3">
-          {% if request.user.is_authenticated %}
-            {% if request.user.email_verified %}
-              <a href="{% url 'trips:register' %}"
-                 class="inline-flex items-center rounded-lg bg-black text-white px-4 py-2 hover:bg-black/90">
-                Join this trip
-              </a>
-            {% else %}
-              <a href="{% url 'accounts:resend-verification' %}"
-                 class="inline-flex items-center rounded-lg border px-4 py-2 hover:bg-gray-100">
-                Verify your email to join
-              </a>
-            {% endif %}
-            <a href="{% url 'trips:my' %}"
-               class="inline-flex items-center rounded-lg border px-4 py-2 hover:bg-gray-100">
-              My Trip
-            </a>
-          {% else %}
-            <a href="{% url 'login' %}?next={% url 'trips:register' %}"
-               class="inline-flex items-center rounded-lg bg-black text-white px-4 py-2 hover:bg-black/90">
-              Join this trip
-            </a>
-            <a href="{% url 'accounts:signup' %}"
-               class="inline-flex items-center rounded-lg border px-4 py-2 hover:bg-gray-100">
-              Create an account
-            </a>
-          {% endif %}
-          <a href="{% url 'trips:home' %}" class="underline">Back to Home</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- CONTRAST band: What’s included + Pricing -->
-    <section class="rounded-2xl bg-gray-50 p-6 md:p-8 mb-10">
-      <div class="grid md:grid-cols-2 gap-6">
-        <div class="rounded-2xl border bg-white p-6 shadow-sm">
-          <h2 class="text-lg font-semibold mb-3">What’s included</h2>
-          <ul class="list-disc pl-5 text-sm space-y-1">
-            <li>🎟️ Entry Pass (Theme <em>or</em> Water Park — your choice)</li>
-            <li>🚌 Luxury Bus Travel</li>
-          </ul>
-        </div>
-        <div class="rounded-2xl border bg-white p-6 shadow-sm">
-          <h2 class="text-lg font-semibold mb-3">Pricing & Discounts</h2>
-          <div class="grid gap-2 text-sm">
-            <div><span class="font-medium">💰 Fees:</span> ₹1299</div>
-            <div><span class="font-medium">🐦 Early Bird:</span> First 10 seats @ ₹1199 (till 31 Aug)</div>
-            <div><span class="font-medium">👯 Group of 8+:</span> ₹1199 per person</div>
-          </div>
-          <div class="mt-3 text-sm text-gray-600">⚡ Limited Seats — Hurry!</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Long details block (from admin) -->
-    {% if trip.details %}
-      <section class="rounded-2xl border bg-white p-6 md:p-8 mb-10 shadow-sm">
-        <h2 class="text-lg font-semibold mb-3">About this trip</h2>
-        <div class="prose max-w-none text-sm leading-relaxed">
-          {{ trip.details|linebreaksbr }}
         </div>
       </section>
-    {% endif %}
 
-    <!-- FAQ / Notes -->
-    <section class="grid md:grid-cols-2 gap-6">
-      <div class="rounded-2xl border bg-white p-6 shadow-sm">
-        <h3 class="font-semibold mb-3">FAQs</h3>
-        <div class="text-sm">
-          <p class="font-medium">Can I choose Theme or Water Park?</p>
-          <p class="text-gray-600 mb-3">Yes — pick your park while joining.</p>
+      <section id="itinerary">
+        <h2 class="text-2xl font-heading font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-3">
+          <svg class="h-6 w-6 text-brand-500 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m0 0v2.25m0-2.25h1.5m-1.5 0h-1.5m0-11.25h1.5m1.5 0h1.5m-1.5 0V3m0 3.75v.75m-3 7.5V3m0 12h-1.5m0 0h-1.5m1.5 0v2.25" /></svg>
+          Your Adventure Timeline
+        </h2>
+        <ol class="relative border-s border-slate-200 dark:border-slate-700">
+          <li class="relative pb-8 ml-10">
+            <span class="absolute -left-[3.25rem] top-0 flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900/50 ring-4 ring-white dark:ring-slate-900 text-lg">☀️</span>
+            <p class="font-semibold text-slate-900 dark:text-slate-100">Morning Meetup & Departure — {{ trip.meetup_time|time:"g:i A" }}</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Please arrive 15 minutes prior to departure at our designated pickup point in <strong>{{ trip.pickup_point }}</strong> for a smooth check-in process. Our luxury AC coach will depart promptly.</p>
+          </li>
+          <li class="relative pb-8 ml-10">
+            <span class="absolute -left-[3.25rem] top-0 flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900/50 ring-4 ring-white dark:ring-slate-900 text-lg">🚌</span>
+            <p class="font-semibold text-slate-900 dark:text-slate-100">Scenic Journey to the Park</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Enjoy a comfortable and relaxing journey through the picturesque landscapes of Maharashtra. Our experienced drivers ensure a safe and pleasant ride as you anticipate the day's excitement.</p>
+          </li>
+          <li class="relative pb-8 ml-10">
+            <span class="absolute -left-[3.25rem] top-0 flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900/50 ring-4 ring-white dark:ring-slate-900 text-lg">🎢</span>
+            <p class="font-semibold text-slate-900 dark:text-slate-100">Full Day at the Park</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Immerse yourself in a full day of thrilling rides, spectacular shows, or refreshing water slides at your chosen park. Your pre-booked e-ticket or booking reference will be sent directly to your email for hassle-free entry.</p>
+          </li>
+          <li class="relative ml-10">
+            <span class="absolute -left-[3.25rem] top-0 flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900/50 ring-4 ring-white dark:ring-slate-900 text-lg">🌙</span>
+            <p class="font-semibold text-slate-900 dark:text-slate-100">Evening Return — Approx. {{ trip.return_time|time:"g:i A" }}{% if trip.return_time %}{% endif %}</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">As the day concludes, gather back at the designated meeting point at the park. Our coach will ensure a safe and comfortable return journey to <strong>Mumbai</strong>, allowing you to relax and relive the day's memories.</p>
+          </li>
+        </ol>
+      </section>
 
-          <p class="font-medium">How will I get my ticket?</p>
-          <p class="text-gray-600 mb-3">We’ll email the Imagica booking reference once booked.</p>
-
-          <p class="font-medium">Where do we meet?</p>
-          <p class="text-gray-600">See pickup details above. We’ll also email reminders.</p>
+      <section id="pricing">
+        <h2 class="text-2xl font-heading font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-3">
+          <svg class="h-6 w-6 text-brand-500 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.75A.75.75 0 013 4.5h.75m0 0h.75A.75.75 0 015.25 6v.75m0 0H3.75m0 0A.75.75 0 013 6V5.25m0 0A.75.75 0 013.75 4.5h.75m0 0V3.75A.75.75 0 015.25 3h.75m0 0h.75a.75.75 0 01.75.75v.75m0 0h-.75m0 0a.75.75 0 01-.75-.75V3.75m0 0A.75.75 0 016 3h.75m0 0h.75A.75.75 0 018.25 3.75v.75m0 0H6.75m0 0A.75.75 0 016 4.5v.75m0 0a.75.75 0 01-.75.75h-.75m0 0H3.75m0 0V6m0 0V5.25m0 0v-.75m3 3v-3m0 0V3.75m0 0h.75m0 0h.75a.75.75 0 01.75.75v1.5m0 0v.75A.75.75 0 019 9h-.75m0 0H6m0 0V6.75m0 0v-.75" /></svg>
+          Inclusions & Pricing
+        </h2>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700">
+            <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100 mb-3">What’s included</h3>
+            <ul class="space-y-2 text-sm text-slate-700 dark:text-slate-300">
+              <li class="flex gap-3"><span>🎟️</span><span>Entry Pass (Theme or Water Park)</span></li>
+              <li class="flex gap-3"><span>🚌</span><span>Luxury AC Bus Travel</span></li>
+              <li class="flex gap-3"><span>🤝</span><span>Trip Coordination & Support</span></li>
+            </ul>
+          </div>
+          <div class="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700">
+            <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100 mb-3">Pricing Tiers</h3>
+            <div class="text-sm text-slate-700 dark:text-slate-300 space-y-1.5">
+              <div class="flex justify-between"><span>Standard Fee:</span><span class="font-semibold text-slate-900 dark:text-white">{% if trip.price %}₹{{ trip.price }}{% else %}₹1299{% endif %}</span></div>
+              <div class="flex justify-between"><span>Early Bird (first 10):</span><span class="font-semibold text-slate-900 dark:text-white">₹1199</span></div>
+              <div class="flex justify-between"><span>Group of 8+:</span><span class="font-semibold text-slate-900 dark:text-white">₹1199 per person</span></div>
+            </div>
+          </div>
         </div>
+      </section>
+
+      <section id="faq">
+        <h2 class="text-2xl font-heading font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-3">
+          <svg class="h-6 w-6 text-brand-500 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" /></svg>
+          Frequently Asked Questions
+        </h2>
+        <div class="space-y-4 text-sm">
+          <div><p class="font-semibold text-slate-800 dark:text-slate-100">How do I choose my park (Theme or Water)?</p><p class="mt-1 text-slate-600 dark:text-slate-400">You'll be able to select your preferred park during the registration process after you click "Join".</p></div>
+          <div><p class="font-semibold text-slate-800 dark:text-slate-100">How will I receive my ticket?</p><p class="mt-1 text-slate-600 dark:text-slate-400">We handle the booking. A digital copy of your ticket/booking reference will be emailed to you before the trip date.</p></div>
+          <div><p class="font-semibold text-slate-800 dark:text-slate-100">Can I cancel my booking?</p><p class="mt-1 text-slate-600 dark:text-slate-400">Yes, free cancellations are accepted up to 24 hours before the trip's departure time. Please reply to your confirmation email to cancel.</p></div>
+        </div>
+      </section>
+      
+    </div>
+
+    <aside class="hidden lg:block lg:sticky lg:top-24 self-start animate-fade-in">
+      <div class="rounded-2xl bg-white dark:bg-slate-800/50 p-6 border border-slate-200 dark:border-slate-700 shadow-xl dark:shadow-2xl">
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Trip at a glance</h2>
+        
+        <dl class="my-4 space-y-3 text-sm">
+          <div class="flex justify-between gap-3"><dt class="text-slate-600 dark:text-slate-400">Date</dt><dd class="font-semibold text-slate-900 dark:text-white">{{ trip.date|date:"D, d M Y" }}</dd></div>
+          <div class="flex justify-between gap-3"><dt class="text-slate-600 dark:text-slate-400">Meetup Time</dt><dd class="font-semibold text-slate-900 dark:text-white">{{ trip.meetup_time|time:"g:i A" }}</dd></div>
+          <div class="flex justify-between gap-3"><dt class="text-slate-600 dark:text-slate-400">Pickup Point</dt><dd class="font-semibold text-slate-900 dark:text-white truncate" title="{{ trip.pickup_point }}">{{ trip.pickup_point }}</dd></div>
+          {% if trip.seats_left %}
+          <div class="flex justify-between gap-3 pt-2 border-t border-slate-200 dark:border-slate-700"><dt class="text-slate-600 dark:text-slate-400">Seats left</dt><dd class="font-semibold text-emerald-600 dark:text-emerald-400">{{ trip.seats_left }} of {{ trip.capacity }}</dd></div>
+          {% endif %}
+        </dl>
+
+        <div class="mt-5 grid gap-3">
+          {% if request.user.is_authenticated %}
+            {% if request.user.email_verified %}
+              <a href="{% url 'trips:register' %}" class="inline-flex items-center justify-center rounded-xl bg-brand-500 hover:bg-brand-600 text-white px-5 py-3 font-bold shadow-button hover:shadow-xl tween transform hover:scale-105">
+                Join This Trip
+              </a>
+            {% else %}
+              {# NOTE: Fixed button with direct inline style for visibility #}
+              <a href="{% url 'accounts:resend-verification' %}"
+                 class="inline-flex items-center justify-center rounded-xl text-white px-5 py-3 font-bold shadow-button hover:shadow-xl tween transform hover:scale-105 hover:brightness-110"
+                 style="background-color: #f59e0b;">
+                  Verify Email to Join
+              </a>
+            {% endif %}
+          {% else %}
+            <a href="{% url 'login' %}?next={% url 'trips:register' %}" class="inline-flex items-center justify-center rounded-xl bg-brand-500 hover:bg-brand-600 text-white px-5 py-3 font-bold shadow-button hover:shadow-xl tween transform hover:scale-105">
+              Log in to Join
+            </a>
+          {% endif %}
+        </div>
+
+        <p class="mt-4 text-xs text-slate-500 dark:text-slate-400 text-center">
+          Limited seats available. Register to confirm your spot!
+        </p>
       </div>
-      <div class="rounded-2xl border bg-white p-6 shadow-sm">
-        <h3 class="font-semibold mb-3">Notes</h3>
-        <ul class="list-disc pl-5 text-sm space-y-1 text-gray-700">
-          <li>Bring a valid ID and ensure you can access your email on the day.</li>
-          <li>Arrive 15 minutes before the meetup time.</li>
-          <li>For changes or queries, reply to the confirmation email.</li>
-        </ul>
+    </aside>
+  </div>
+
+  <div class="block lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200 dark:border-slate-700">
+    <div class="safe-x p-4 flex items-center justify-between gap-4">
+      <div>
+        <p class="text-xs text-slate-600 dark:text-slate-400">Starting from</p>
+        <p class="text-xl font-bold text-slate-900 dark:text-white">₹1199</p>
       </div>
-    </section>
-  {% else %}
-    <section class="rounded-2xl bg-gray-50 p-10 text-center">
-      <h1 class="text-3xl md:text-4xl font-bold tracking-tight">No active trip</h1>
-      <p class="text-gray-600 mt-2">We’ll announce the next one here soon.</p>
-      <a href="{% url 'trips:home' %}" class="underline mt-4 inline-block">Back to Home</a>
-    </section>
-  {% endif %}
+      <div class="flex-shrink-0">
+        {% if request.user.is_authenticated %}
+          {% if request.user.email_verified %}
+            <a href="{% url 'trips:register' %}" class="inline-flex items-center justify-center rounded-xl bg-brand-500 hover:bg-brand-600 text-white px-6 py-3 font-bold shadow-button tween">
+              Join Trip
+            </a>
+          {% else %}
+            {# NOTE: Fixed button with direct inline style for visibility #}
+            <a href="{% url 'accounts:resend-verification' %}"
+               class="inline-flex items-center justify-center rounded-xl text-white px-6 py-3 font-bold shadow-button tween hover:brightness-110"
+               style="background-color: #f59e0b;">
+                Verify Email
+            </a>
+          {% endif %}
+        {% else %}
+          <a href="{% url 'login' %}?next={% url 'trips:register' %}" class="inline-flex items-center justify-center rounded-xl bg-brand-500 hover:bg-brand-600 text-white px-6 py-3 font-bold shadow-button tween">
+            Log in to Join
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+{% else %}
+  <section class="rounded-2xl bg-white dark:bg-slate-800/50 p-10 text-center border border-slate-200 dark:border-slate-700 shadow-xl">
+    <div class="max-w-md mx-auto">
+      <div class="w-16 h-16 mx-auto rounded-2xl bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center text-brand-600 dark:text-brand-300 mb-6">
+        <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+      </div>
+      <h2 class="text-2xl font-heading font-semibold text-slate-800 dark:text-slate-100">Trip Not Found</h2>
+      <p class="text-slate-600 dark:text-slate-400 mt-2">This trip may be over or the link is incorrect.</p>
+      <a href="{% url 'trips:home' %}" class="inline-flex items-center rounded-xl bg-brand-500 hover:bg-brand-600 text-white px-5 py-3 font-medium shadow-button hover:shadow-lg tween mt-6">
+        Back to Home
+      </a>
+    </div>
+  </section>
+{% endif %}
 {% endblock %}

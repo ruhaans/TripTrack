@@ -1,41 +1,40 @@
-"""
-Django settings for triptrack project.
-Env-driven; supports Postgres via DATABASE_URL with SQLite fallback.
-"""
-
-from pathlib import Path
 import os
-from django.core.management.utils import get_random_secret_key
+from pathlib import Path
+
 from dotenv import load_dotenv
+import dj_database_url
 
-# -----------------------------------------------------------------------------
-# Paths & .env
-# -----------------------------------------------------------------------------
+# Load .env if present (local dev); in prod rely on real env vars
+load_dotenv()
+
+# -------------------------------------------------------------
+# Paths
+# -------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / ".env")
 
-def env(name: str, default=None, cast=str):
-    val = os.getenv(name, default)
-    if val is None:
-        return None
-    return cast(val)
+# -------------------------------------------------------------
+# Core settings
+# -------------------------------------------------------------
+DEBUG = os.getenv("DEBUG", "True").lower() in ("1", "true", "yes")
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-secret-key-change-me")
 
-# -----------------------------------------------------------------------------
-# Core
-# -----------------------------------------------------------------------------
-SECRET_KEY = env("SECRET_KEY") or get_random_secret_key()
-DEBUG = (env("DEBUG", "True").lower() == "true")
+ALLOWED_HOSTS = [
+    h.strip()
+    for h in os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+    if h.strip()
+]
 
-# Comma-separated list like: "127.0.0.1,localhost,triptrack.onrender.com"
-ALLOWED_HOSTS = [h.strip() for h in env("ALLOWED_HOSTS", "").split(",") if h.strip()]
+CSRF_TRUSTED_ORIGINS = [
+    o.strip()
+    for o in os.getenv("CSRF_TRUSTED_ORIGINS", "http://127.0.0.1,http://localhost").split(",")
+    if o.strip()
+]
 
-# Must include scheme(s) in Django 4+ (e.g., http://127.0.0.1, https://yourdomain.com)
-CSRF_TRUSTED_ORIGINS = [o.strip() for o in env("CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()]
-
-# -----------------------------------------------------------------------------
-# Apps
-# -----------------------------------------------------------------------------
+# -------------------------------------------------------------
+# Applications
+# -------------------------------------------------------------
 INSTALLED_APPS = [
+    # Django apps
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -43,20 +42,22 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
+    # Local apps
     "accounts",
     "trips",
 ]
 
-# -----------------------------------------------------------------------------
+AUTH_USER_MODEL = "accounts.User"
+
+# -------------------------------------------------------------
 # Middleware
-# -----------------------------------------------------------------------------
+# -------------------------------------------------------------
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # after SecurityMiddleware
-
-    "django.contrib.sessions.middleware.SessionMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # before CommonMiddleware
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -64,6 +65,9 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "triptrack.urls"
 
+# -------------------------------------------------------------
+# Templates
+# -------------------------------------------------------------
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -71,10 +75,10 @@ TEMPLATES = [
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
+                "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "trips.context_processors.active_trip",
             ],
         },
     },
@@ -82,24 +86,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "triptrack.wsgi.application"
 
-# -----------------------------------------------------------------------------
-# Database (Postgres via DATABASE_URL; fallback to SQLite)
-# -----------------------------------------------------------------------------
-# Examples:
-#   postgres:
-#     DATABASE_URL=postgres://USER:PASS@HOST:PORT/DBNAME
-#     DATABASE_URL=postgresql://USER:PASS@HOST:PORT/DBNAME
-#   with SSL:
-#     DATABASE_URL=postgres://USER:PASS@HOST:PORT/DBNAME?sslmode=require
-DATABASE_URL = env("DATABASE_URL", "")
-
+# -------------------------------------------------------------
+# Database
+#   - Local default: SQLite
+#   - Production: set DATABASE_URL (e.g., postgres://...)
+# -------------------------------------------------------------
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 if DATABASE_URL:
-    import dj_database_url
     DATABASES = {
-        "default": dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=int(env("DB_CONN_MAX_AGE", "600")),
-            ssl_require=(env("DB_SSL_REQUIRE", "False").lower() == "true"),
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=not DEBUG,
         )
     }
 else:
@@ -110,14 +108,9 @@ else:
         }
     }
 
-# -----------------------------------------------------------------------------
-# Custom user model
-# -----------------------------------------------------------------------------
-AUTH_USER_MODEL = "accounts.User"
-
-# -----------------------------------------------------------------------------
+# -------------------------------------------------------------
 # Password validation
-# -----------------------------------------------------------------------------
+# -------------------------------------------------------------
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -125,60 +118,98 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# -----------------------------------------------------------------------------
-# I18N
-# -----------------------------------------------------------------------------
+# -------------------------------------------------------------
+# Internationalization
+# -------------------------------------------------------------
 LANGUAGE_CODE = "en-us"
-TIME_ZONE = env("TIME_ZONE", "Asia/Kolkata")
+TIME_ZONE = os.getenv("TIME_ZONE", "Asia/Kolkata")
 USE_I18N = True
 USE_TZ = True
 
-# -----------------------------------------------------------------------------
-# Static files (WhiteNoise)
-# -----------------------------------------------------------------------------
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# -------------------------------------------------------------
+# Static & Media
+# -------------------------------------------------------------
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [p for p in [BASE_DIR / "static"] if p.exists()]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else []
+
+# WhiteNoise: hashed files and GZip/Brotli
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# -----------------------------------------------------------------------------
-# Auth redirects
-# -----------------------------------------------------------------------------
-LOGIN_URL = "login"
-LOGIN_REDIRECT_URL = env("LOGIN_REDIRECT_URL", "trips:home")
-LOGOUT_REDIRECT_URL = env("LOGOUT_REDIRECT_URL", "trips:home")
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
-# -----------------------------------------------------------------------------
-# Email (Gmail SMTP via App Password)
-# -----------------------------------------------------------------------------
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = env("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = int(env("EMAIL_PORT", "587"))
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = env("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", "")
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "noreply@triptrack.local")
-
-# -----------------------------------------------------------------------------
-# Security (sane defaults for prod; okay locally)
-# -----------------------------------------------------------------------------
-SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
-SECURE_SSL_REDIRECT = (env("SECURE_SSL_REDIRECT", "False").lower() == "true") if DEBUG else True
-SECURE_HSTS_SECONDS = 0 if DEBUG else 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
-SECURE_HSTS_PRELOAD = not DEBUG
-
-# If behind a proxy/edge (Render/Railway etc.)
-USE_X_FORWARDED_HOST = True
+# -------------------------------------------------------------
+# Security (toggled by DEBUG)
+# -------------------------------------------------------------
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
 
-# -----------------------------------------------------------------------------
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30  # 30 days to start; raise later
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    X_FRAME_OPTIONS = "DENY"
+
+# Always set a sane referrer policy
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
+# -------------------------------------------------------------
+# Email
+#   Tip: for local dev you can set:
+#   EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+# -------------------------------------------------------------
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.zoho.in")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "465"))
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "False").lower() == "true"
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "True").lower() == "true"
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "noreply@triptrack.online")
+EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "30"))
+
+
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+# -------------------------------------------------------------
 # Logging
-# -----------------------------------------------------------------------------
+# -------------------------------------------------------------
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler"}},
-    "root": {"handlers": ["console"], "level": "DEBUG" if DEBUG else "WARNING"},
+    "formatters": {
+        "simple": {"format": "[{levelname}] {name}: {message}", "style": "{"},
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "simple"},
+    },
+    "root": {"handlers": ["console"], "level": LOG_LEVEL},
+    "loggers": {
+        "django.server": {"handlers": ["console"], "level": LOG_LEVEL, "propagate": False},
+        "django.security": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+    },
 }
+
+# -------------------------------------------------------------
+# Health check utility (optional)
+# -------------------------------------------------------------
+# You can add a lightweight health endpoint in urls.py:
+# path("healthz/", lambda r: HttpResponse("ok"))
+
+
+LOGIN_URL = "login"
+
+LOGIN_REDIRECT_URL = "accounts:after-login"
+
+LOGOUT_REDIRECT_URL = os.getenv("LOGOUT_REDIRECT_URL", "trips:home")
+
+
+# settings.py
+APP_BASE_URL = os.getenv("APP_BASE_URL", "http://127.0.0.1:8000")

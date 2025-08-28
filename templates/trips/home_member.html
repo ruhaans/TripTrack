@@ -1,0 +1,139 @@
+{# templates/trips/home_member.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}You're In! · TripTrack{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8 animate-fade-in">
+
+  <header class="text-center py-8">
+    <h1 class="text-4xl sm:text-6xl lg:text-7xl font-heading font-extrabold tracking-tight bg-gradient-to-r from-brand-400 via-coral to-amber-400 bg-clip-text text-transparent">
+      You’re in Imagica!
+    </h1>
+    <p class="mt-4 text-lg text-slate-600 dark:text-slate-400">
+      Hey {{ request.user.first_name|default:request.user.username }} — see your trip details below.
+    </p>
+  </header>
+
+  <section class="rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-6 sm:p-8 shadow-xl dark:shadow-2xl">
+    
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
+      <div>
+        <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100">Your trip is locked in! ✈️</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400">You've successfully registered for {{ trip.name }}.</p>
+      </div>
+      <div class="shrink-0">
+        {% if registration.status == "paid" %}
+          <span class="inline-flex items-center rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-3 py-1 text-xs font-semibold">Paid & Confirmed</span>
+        {% elif registration.status == "pending" %}
+          <span class="inline-flex items-center rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-3 py-1 text-xs font-semibold">Pending Confirmation</span>
+        {% else %}
+          <span class="inline-flex items-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 px-3 py-1 text-xs font-semibold">{{ registration.status|default:"Registered" }}</span>
+        {% endif %}
+      </div>
+    </div>
+    
+    <hr class="my-6 border-slate-200 dark:border-slate-700" />
+    
+    <div>
+      <h3 class="text-center text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">Countdown to Adventure</h3>
+      <div id="countdown" data-start="{{ trip_start_iso }}" class="grid grid-cols-4 gap-3 sm:gap-4 text-center">
+        <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 sm:p-4"><div class="text-3xl sm:text-5xl font-bold text-brand-600 dark:text-brand-400" data-unit="days">--</div><div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Days</div></div>
+        <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 sm:p-4"><div class="text-3xl sm:text-5xl font-bold text-brand-600 dark:text-brand-400" data-unit="hours">--</div><div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Hours</div></div>
+        <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 sm:p-4"><div class="text-3xl sm:text-5xl font-bold text-brand-600 dark:text-brand-400" data-unit="minutes">--</div><div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Minutes</div></div>
+        <div class="rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 sm:p-4"><div class="text-3xl sm:text-5xl font-bold text-brand-600 dark:text-brand-400" data-unit="seconds">--</div><div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Seconds</div></div>
+      </div>
+      <p class="mt-4 text-xs text-slate-500 dark:text-slate-400 text-center">We’ll meet at <strong>{{ trip.pickup_point }}</strong> on <strong>{{ trip.date|date:"D, d M Y" }}</strong> at <strong>{{ trip.meetup_time|time:"g:i A" }}</strong>. See you there!</p>
+    </div>
+  </section>
+
+  <section class="grid md:grid-cols-2 gap-6">
+    <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-6 shadow-xl dark:shadow-2xl">
+      <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">✅ Trip Checklist</h3>
+      <ul class="text-sm text-slate-700 dark:text-slate-300 space-y-2">
+        <li class="flex gap-3"><span>🪪</span><span>Valid ID & access to your email for e-tickets.</span></li>
+        <li class="flex gap-3"><span>💧</span><span>Water bottle & light snacks for the bus journey.</span></li>
+        <li class="flex gap-3"><span>🧢</span><span>Cap / sunscreen for sunny hours.</span></li>
+        <li class="flex gap-3"><span>👟</span><span>Comfortable walking shoes are a must!</span></li>
+      </ul>
+    </div>
+    <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-6 shadow-xl dark:shadow-2xl">
+      <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">❌ Prohibited Items</h3>
+       <ul class="text-sm text-slate-700 dark:text-slate-300 space-y-2">
+        <li class="flex gap-3"><span>🍾</span><span>Alcohol or any prohibited substances.</span></li>
+        <li class="flex gap-3"><span>🗡️</span><span>Sharp or unsafe items (will be refused).</span></li>
+        <li class="flex gap-3"><span>📦</span><span>Large luggage (a small backpack is fine).</span></li>
+        <li class="flex gap-3"><span>외부 음식</span><span>Outside food and beverages inside the park.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-6">
+    <h3 class="text-lg font-semibold text-amber-900 dark:text-amber-200 mb-2">Important Final Details</h3>
+    <div class="prose prose-sm text-amber-800 dark:text-amber-300 max-w-none">
+      <p>Your e-ticket or booking reference will be sent to <strong>{{ request.user.email }}</strong> once our group booking is confirmed. Please remain with the group and follow the organizer's instructions for a safe and timely trip. For any urgent queries, reply to your confirmation email.</p>
+    </div>
+    <div class="mt-4">
+       <a href="{% url 'trips:trip-details' %}" class="text-sm font-semibold text-amber-900 dark:text-amber-200 hover:underline">Review Full Trip Details →</a>
+    </div>
+  </section>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+<script>
+  (function () {
+    const el = document.getElementById("countdown");
+    if (!el) return;
+    const target = new Date(el.getAttribute("data-start"));
+    const dEl = el.querySelector('[data-unit="days"]');
+    const hEl = el.querySelector('[data-unit="hours"]');
+    const mEl = el.querySelector('[data-unit="minutes"]');
+    const sEl = el.querySelector('[data-unit="seconds"]');
+    function pad(n) { return String(n).padStart(2, "0"); }
+    function tick() {
+      const diff = Math.max(0, target - new Date());
+      const days = Math.floor(diff / 86400000);
+      const hours = Math.floor((diff % 86400000) / 3600000);
+      const minutes = Math.floor((diff % 3600000) / 60000);
+      const seconds = Math.floor((diff % 60000) / 1000);
+      if (dEl) dEl.textContent = days;
+      if (hEl) hEl.textContent = pad(hours);
+      if (mEl) mEl.textContent = pad(minutes);
+      if (sEl) sEl.textContent = pad(seconds);
+    }
+    tick();
+    setInterval(tick, 1000);
+  })();
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('registered')) {
+      // A more impactful, single burst "pop"
+      const count = 200;
+      const defaults = {
+        origin: { y: 0.7 }
+      };
+
+      function fire(particleRatio, opts) {
+        confetti({
+          ...defaults,
+          ...opts,
+          particleCount: Math.floor(count * particleRatio)
+        });
+      }
+
+      fire(0.25, { spread: 26, startVelocity: 55 });
+      fire(0.2, { spread: 60 });
+      fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+      fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+      fire(0.1, { spread: 120, startVelocity: 45 });
+    }
+  });
+</script>
+{% endblock %}

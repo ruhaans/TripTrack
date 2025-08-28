@@ -1,0 +1,15 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    /* Main styles for the icon */
+    .bg { fill: #14b8a6; } /* Your brand-500 teal color */
+    .icon { fill: #ffffff; }
+
+    /* Styles for when the user is in dark mode */
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #134e4a; } /* Your brand-900 color for a dark background */
+      .icon { fill: #99f6e4; } /* A light, vibrant brand-200 color for the icon */
+    }
+  </style>
+  <rect class="bg" width="32" height="32" rx="8" />
+  <path class="icon" d="M16.002 8.005c-3.313 0-6 2.686-6 6 0 3.312 6 8.995 6 8.995s6-5.683 6-8.995c0-3.314-2.687-6-6-6zm0 8.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+</svg>

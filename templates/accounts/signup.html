@@ -1,81 +1,191 @@
+{# templates/accounts/signup.html #}
 {% extends "base.html" %}
 {% block title %}Sign up · TripTrack{% endblock %}
+
+{# NOTE: Added a head block to style the form inputs consistently with the login page. #}
+{% block head %}
+<style>
+  /* Basic styling for Django-rendered text inputs */
+  #id_username, #id_email, #id_password1, #id_password2 {
+    display: block;
+    width: 100%;
+    border-radius: 0.5rem; /* rounded-lg */
+    padding: 0.625rem 0.875rem; /* py-2.5 px-3.5 */
+    font-size: 0.875rem; /* text-sm */
+    line-height: 1.25rem;
+    transition: all .2s ease-in-out;
+  }
+  /* Custom styling for the checkbox */
+  #id_accept_terms {
+    height: 1.125rem; /* h-4.5 */
+    width: 1.125rem; /* w-4.5 */
+    border-radius: 0.25rem; /* rounded */
+    accent-color: #0d9488; /* brand-600 */
+  }
+
+  /* Light theme input styles */
+  .light #id_username, .light #id_email, .light #id_password1, .light #id_password2 {
+    background-color: #f8fafc; /* slate-50 */
+    border: 1px solid #cbd5e1; /* slate-300 */
+    color: #0f172a; /* slate-900 */
+  }
+  .light #id_username:focus, .light #id_email:focus, .light #id_password1:focus, .light #id_password2:focus {
+    --tw-ring-color: #14b8a6; /* brand-500 */
+    border-color: #14b8a6; /* brand-500 */
+    box-shadow: 0 0 0 2px var(--tw-ring-color);
+  }
+  .light #id_accept_terms {
+    border: 1px solid #cbd5e1; /* slate-300 */
+  }
+
+  /* Dark theme input styles */
+  .dark #id_username, .dark #id_email, .dark #id_password1, .dark #id_password2 {
+    background-color: #1e293b; /* slate-800 */
+    border: 1px solid #475569; /* slate-600 */
+    color: #f1f5f9; /* slate-100 */
+  }
+  .dark #id_username:focus, .dark #id_email:focus, .dark #id_password1:focus, .dark #id_password2:focus {
+    --tw-ring-color: #2dd4bf; /* brand-400 */
+    border-color: #2dd4bf; /* brand-400 */
+    box-shadow: 0 0 0 2px var(--tw-ring-color);
+  }
+  .dark #id_accept_terms {
+    background-color: #334155; /* slate-700 */
+    border: 1px solid #475569; /* slate-600 */
+  }
+</style>
+{% endblock %}
+
+
 {% block content %}
-<div class="max-w-md mx-auto">
-  <h1 class="text-2xl font-bold mb-6">Create your account</h1>
-
-  <form method="post" class="space-y-5 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-    {% csrf_token %}
-
-    <!-- Username -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-      {{ form.username }}
-      {% if form.username.errors %}
-        <p class="text-xs text-red-600 mt-1">{{ form.username.errors|striptags }}</p>
-      {% else %}
-        <p class="text-xs text-gray-500 mt-1">Used to address you inside TripTrack.</p>
-      {% endif %}
-    </div>
-
-    <!-- Email -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-      {{ form.email }}
-      {% if form.email.errors %}
-        <p class="text-xs text-red-600 mt-1">{{ form.email.errors|striptags }}</p>
-      {% else %}
-        <p class="text-xs text-gray-500 mt-1">We’ll send a verification link here.</p>
-      {% endif %}
-    </div>
-
-    <!-- Passwords with tiny toggle -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-      <div class="relative">
-        {{ form.password1 }}
-        <button type="button" id="toggleP1" class="absolute inset-y-0 right-2 my-auto text-xs text-gray-600">Show</button>
+<div class="w-full animate-fade-in">
+  <div class="flex items-center justify-center min-h-[70vh] py-12 px-4">
+    <section class="w-full max-w-md mx-auto">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl sm:text-4xl font-heading font-semibold text-slate-800 dark:text-slate-100">Create Your Account</h1>
+        <p class="text-sm text-slate-600 dark:text-slate-400 mt-2">Join and start planning trips in seconds.</p>
       </div>
-      {% if form.password1.errors %}
-        <p class="text-xs text-red-600 mt-1">{{ form.password1.errors|striptags }}</p>
-      {% endif %}
-    </div>
 
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Confirm password</label>
-      <div class="relative">
-        {{ form.password2 }}
-        <button type="button" id="toggleP2" class="absolute inset-y-0 right-2 my-auto text-xs text-gray-600">Show</button>
-      </div>
-      {% if form.password2.errors %}
-        <p class="text-xs text-red-600 mt-1">{{ form.password2.errors|striptags }}</p>
-      {% endif %}
-    </div>
+      <form method="post" novalidate
+            class="space-y-5 bg-white dark:bg-slate-800/50 p-6 sm:p-8 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl dark:shadow-2xl">
+        {% csrf_token %}
 
-    <button type="submit"
-            class="w-full px-4 py-2 rounded-lg bg-black text-white hover:bg-black/90">
-      Create account
-    </button>
+        {# Non-field errors #}
+        {% if form.non_field_errors %}
+          <div class="text-sm text-red-800 dark:text-red-300 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-lg px-4 py-3">
+            {% for err in form.non_field_errors %}{{ err }}{% endfor %}
+          </div>
+        {% endif %}
 
-    <p class="text-xs text-gray-500">By continuing, you agree to our trip policies.</p>
-  </form>
+        <div>
+          <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Username
+          </label>
+          {{ form.username }}
+          {% if form.username.errors %}
+            <p class="text-xs text-red-600 dark:text-red-400 mt-1.5">{{ form.username.errors|striptags }}</p>
+          {% else %}
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5">This is how you'll appear inside TripTrack.</p>
+          {% endif %}
+        </div>
+
+        <div>
+          <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Email
+          </label>
+          {{ form.email }}
+          {% if form.email.errors %}
+            <p class="text-xs text-red-600 dark:text-red-400 mt-1.5">{{ form.email.errors|striptags }}</p>
+          {% else %}
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5">We’ll send a verification link to this address.</p>
+          {% endif %}
+        </div>
+
+        <div>
+          <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Password
+          </label>
+          <div class="relative">
+            {{ form.password1 }}
+            {# NOTE: SVG icon toggle for password visibility #}
+            <button type="button" id="toggleP1" class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 tween" aria-label="Toggle password visibility">
+              <svg id="p1-icon-hide" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.243 4.243L6.228 6.228" /></svg>
+              <svg id="p1-icon-show" class="h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.432 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            </button>
+          </div>
+          {% if form.password1.errors %}
+            <p class="text-xs text-red-600 dark:text-red-400 mt-1.5">{{ form.password1.errors|striptags }}</p>
+          {% elif form.password1.help_text %}
+            <div class="text-xs text-slate-500 dark:text-slate-400 mt-1.5 space-y-1">{{ form.password1.help_text|safe }}</div>
+          {% endif %}
+        </div>
+
+        <div>
+          <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Confirm password
+          </label>
+          <div class="relative">
+            {{ form.password2 }}
+            <button type="button" id="toggleP2" class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 tween" aria-label="Toggle password visibility">
+              <svg id="p2-icon-hide" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.243 4.243L6.228 6.228" /></svg>
+              <svg id="p2-icon-show" class="h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.432 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            </button>
+          </div>
+          {% if form.password2.errors %}
+            <p class="text-xs text-red-600 dark:text-red-400 mt-1.5">{{ form.password2.errors|striptags }}</p>
+          {% endif %}
+        </div>
+        
+        <div class="pt-2">
+          <div class="flex items-start gap-3">
+            {{ form.accept_terms }}
+            <label for="{{ form.accept_terms.id_for_label }}" class="text-sm text-slate-600 dark:text-slate-400 select-none">
+              I agree to the <a href="#" class="font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 underline underline-offset-2 tween">Terms of Service</a> and trip policies.
+            </label>
+          </div>
+          {% if form.accept_terms.errors %}
+            <p class="text-xs text-red-600 dark:text-red-400 mt-1.5 pl-px">{{ form.accept_terms.errors|striptags }}</p>
+          {% endif %}
+        </div>
+
+        <div class="pt-2">
+          <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 text-white font-semibold shadow-button hover:shadow-lg hover:-translate-y-0.5 tween focus-ring">
+            Create Account
+          </button>
+        </div>
+
+        <p class="text-sm text-slate-600 dark:text-slate-400 text-center pt-2">
+          Already have an account?
+          <a href="{% url 'accounts:login' %}" class="font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 underline underline-offset-2 tween">
+            Log in
+          </a>
+        </p>
+      </form>
+    </section>
+  </div>
 </div>
 
+{# NOTE: Updated JS to handle two password fields #}
 <script>
-  const t1 = document.getElementById('toggleP1');
-  const t2 = document.getElementById('toggleP2');
-  const p1 = document.getElementById('{{ form.password1.id_for_label }}');
-  const p2 = document.getElementById('{{ form.password2.id_for_label }}');
+  (function () {
+    function setupPasswordToggle(toggleBtnId, inputId, showIconId, hideIconId) {
+      const btn = document.getElementById(toggleBtnId);
+      const input = document.getElementById(inputId);
+      const iconShow = document.getElementById(showIconId);
+      const iconHide = document.getElementById(hideIconId);
 
-  function toggle(btn, input){
-    if (!btn || !input) return;
-    btn.addEventListener('click', () => {
-      const isPw = input.getAttribute('type') === 'password';
-      input.setAttribute('type', isPw ? 'text' : 'password');
-      btn.textContent = isPw ? 'Hide' : 'Show';
-    });
-  }
-  toggle(t1, p1);
-  toggle(t2, p2);
+      if (!btn || !input || !iconShow || !iconHide) return;
+
+      btn.addEventListener('click', () => {
+        const isPasswordType = input.getAttribute('type') === 'password';
+        input.setAttribute('type', isPasswordType ? 'text' : 'password');
+        iconShow.classList.toggle('hidden', !isPasswordType);
+        iconHide.classList.toggle('hidden', isPasswordType);
+      });
+    }
+
+    setupPasswordToggle('toggleP1', '{{ form.password1.id_for_label }}', 'p1-icon-show', 'p1-icon-hide');
+    setupPasswordToggle('toggleP2', '{{ form.password2.id_for_label }}', 'p2-icon-show', 'p2-icon-hide');
+  })();
 </script>
 {% endblock %}

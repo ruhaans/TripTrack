@@ -11,36 +11,29 @@ from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
-
+from trips.utils.urls import absolute_url
+from accounts.email_utils import send_verification_email
 from .forms import SignupForm
-
+from accounts.email_utils import SIGN_SALT
 User = get_user_model()
-SIGN_SALT = "triptrack.email.verify"   # single salt used everywhere
+# SIGN_SALT = "triptrack.email.verify"   # single salt used everywhere
 
 
 # ---------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------
 
-def _verification_link(request, user: User) -> str:
-    token = signing.dumps({"uid": user.pk, "email": user.email}, salt=SIGN_SALT)
-    return request.build_absolute_uri(reverse("accounts:verify-email", kwargs={"token": token}))
+# def _verification_link(request, user: User) -> str:
+#     token = signing.dumps({"uid": user.pk, "email": user.email}, salt=SIGN_SALT)
+#     return request.build_absolute_uri(reverse("accounts:verify-email", kwargs={"token": token}))
 
-def _send_verification_email(request, user: User) -> None:
-    url = _verification_link(request, user)
-    subject = "Verify your email for TripTrack"
-    body = (
-        f"Hi {user.username},\n\n"
-        f"Please verify your email by clicking this link:\n{url}\n\n"
-        f"If you didn't sign up, you can ignore this message."
-    )
-    send_mail(
-        subject,
-        body,
-        getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@triptrack.local"),
-        [user.email],
-        fail_silently=False,
-    )
+def _verification_link(user):
+    token = signing.dumps({"uid": user.pk, "email": user.email}, salt=SIGN_SALT)
+    path = reverse("accounts:verify-email", kwargs={"token": token})
+    return absolute_url(path)
+
+def _send_verification_email(request, user):
+    send_verification_email(user)
 
 
 # ---------------------------------------------------------------------
@@ -69,7 +62,7 @@ def signup(request):
                 request,
                 "Account created. We’ve sent a verification email — please verify to join the trip."
             )
-            return redirect("accounts:after-login")  # staff->manage, user->
+            return redirect("accounts:after-login")  # staff->manage, user->home
     else:
         form = SignupForm()
     return render(request, "accounts/signup.html", {"form": form})
@@ -85,6 +78,7 @@ def verify_email(request, token: str):
         uid = data.get("uid")
         email = data.get("email")
     except signing.BadSignature:
+        # Friendlier UX than a raw 400: show a small template later if you like
         return HttpResponseBadRequest("Invalid or expired verification link.")
 
     try:
@@ -100,18 +94,37 @@ def verify_email(request, token: str):
         messages.info(request, "Your email is already verified.")
 
     # If they’re logged in on this browser, take them to their hub; otherwise to login.
-    return redirect("trips:home" if request.user.is_authenticated else "login")
+    return redirect("trips:home" if request.user.is_authenticated else "accounts:login")
 
+
+# -------------------- Resend Verification (UX page) --------------------
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def resend_verification(request):
-    """Logged-in users can resend the verification email."""
-    if getattr(request.user, "email_verified", False):
-        messages.info(request, "Your email is already verified.")
-        return redirect("trips:home")
-    _send_verification_email(request, request.user)
-    messages.success(request, "Verification email sent again. Check your inbox.")
-    return redirect("trips:home")
+    """
+    UX page for resending the verification email.
+
+    - GET  -> render a page with a button (disabled if already verified)
+    - POST -> send the email (unless already verified), then redisplay page with a message
+    """
+    user = request.user
+
+    if request.method == "POST":
+        if getattr(user, "email_verified", False):
+            messages.info(request, "Your email is already verified.")
+            return redirect("accounts:resend-verification")
+
+        _send_verification_email(request, user)
+        messages.success(request, f"Verification email sent to {user.email}. Check your inbox.")
+        return redirect("accounts:resend-verification")
+
+    # GET: render the page
+    context = {
+        "email": user.email,
+        "is_verified": bool(getattr(user, "email_verified", False)),
+    }
+    return render(request, "accounts/resend_verification.html", context)
 
 
 # Optional: role-aware post-login redirect used by LOGIN_REDIRECT_URL

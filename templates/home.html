@@ -4,208 +4,153 @@
 
 {% block content %}
 
-  {# ===== Greeting band (only when logged in) ===== #}
+  {% if request.user.is_authenticated and not request.user.email_verified %}
+    <div class="mb-8 rounded-2xl bg-amber-400 p-4 border-2 border-amber-500 shadow-lg animate-fade-in dark:bg-amber-500 dark:border-amber-600">
+      <div class="flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-4 text-center sm:text-left">
+        <div class="flex items-center gap-4">
+          {% comment %} <div class="hidden sm:block flex-shrink-0 w-11 h-11 rounded-full bg-white/30 grid place-items-center text-white">
+            <span class="text-2xl font-bold select-none">!</span>
+          </div> {% endcomment %}
+          <p class="font-semibold text-amber-900 dark:text-white">
+            <strong class="font-extrabold block text-lg">Action Required</strong> Please check your inbox to verify your email.
+          </p>
+        </div>
+        <a href="{% url 'accounts:resend-verification' %}" 
+           class="inline-block flex-shrink-0 text-sm rounded-lg px-5 py-2.5 text-white font-bold shadow-md tween hover:brightness-110"
+           style="background-color: #f59e0b;">
+          Resend Verification Link
+        </a>
+      </div>
+    </div>
+  {% endif %}
+
+  {# ===== Greeting (subtle and compact) ===== #}
   {% if request.user.is_authenticated %}
-    <div class="mb-6 rounded-2xl border bg-white p-4 text-sm text-gray-700">
-      Hey {{ request.user.first_name|default:request.user.username }}, ready for the next adventure? 🎒
+    <div class="mb-8 rounded-xl bg-white/60 dark:bg-slate-800/30 backdrop-blur-sm p-4 border border-slate-200 dark:border-slate-700/50 shadow-sm text-sm flex items-center gap-3 animate-fade-in">
+      <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white font-bold text-lg">
+        {{ request.user.username.0|upper }}
+      </div>
+      <div>
+        <p class="font-semibold text-slate-800 dark:text-slate-200">Hey, {{ request.user.username|capfirst }}!</p>
+        <p class="text-slate-600 dark:text-slate-400">Ready for the next adventure? 🎒</p>
+      </div>
     </div>
   {% endif %}
 
   {% if active_trip %}
-    {# ===== HERO: 1:1 image card + summary ===== #}
-    <section class="grid md:grid-cols-2 gap-8 items-center mb-10">
-      <!-- Left: Square image as a card -->
-      <div class="flex justify-center">
-        <img src="{% static 'img/imagica-banner.png' %}"
-             alt="{{ active_trip.name }}"
-             class="rounded-2xl shadow-lg w-72 h-72 object-cover ring-1 ring-black/5">
+    {# ===== HERO SECTION (Streamlined) ===== #}
+    <section class="relative mb-12 rounded-2xl md:rounded-3xl overflow-hidden bg-slate-900 text-white animate-fade-in">
+      <div class="absolute inset-0 z-0 opacity-20">
+        <img src="{% static 'img/imagica-banner.png' %}" alt="{{ active_trip.name }}" class="w-full h-full object-cover">
       </div>
-
-      <!-- Right: Trip summary + CTAs -->
-      <div>
-        <h1 class="text-3xl md:text-4xl font-bold tracking-tight">
-          {{ active_trip.name }}
-        </h1>
-        <p class="text-gray-600 mt-2">
-          One-day blast — seats are limited. Join in a few seconds.
-        </p>
-
-        <div class="mt-5 grid gap-2 text-sm">
-          <div><span class="font-medium">📅 Date:</span> {{ active_trip.date }}</div>
-          <div><span class="font-medium">🕘 Meetup:</span> {{ active_trip.meetup_time }}</div>
-          <div><span class="font-medium">📍 Pickup:</span> {{ active_trip.pickup_point }}</div>
-          <div>
-            <span class="font-medium">🪑 Seats:</span>
-            {{ active_trip.capacity }}
-            {% if active_trip.seats_left %} ({{ active_trip.seats_left }} left){% endif %}
+      
+      <div class="relative z-10 p-6 py-10 md:p-12 text-center">
+        <div class="max-w-3xl mx-auto">
+          <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm mb-4">
+            <span class="h-2 w-2 rounded-full bg-brand-400 animate-pulse"></span>
+            <span>Upcoming Trip</span>
           </div>
-        </div>
-
-        <div class="mt-6 flex flex-wrap gap-3">
-          {% if request.user.is_authenticated %}
-            {% if request.user.email_verified %}
-              <a href="{% url 'trips:register' %}"
-                 class="inline-flex items-center rounded-lg bg-black text-white px-4 py-2 hover:bg-black/90">
-                Join this trip
-              </a>
+          
+          <h1 class="text-4xl md:text-5xl font-heading font-bold tracking-tight mb-4">
+            {{ active_trip.name }}
+          </h1>
+          
+          <p class="text-slate-300 mb-6 max-w-xl mx-auto">
+            Join us for an unforgettable day of thrills and fun. Seats are limited, so book your spot now!
+          </p>
+          
+          {# ===== PRIMARY CTA BUTTONS ===== #}
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+            {% if request.user.is_authenticated %}
+              {% if request.user.email_verified %}
+                <a href="{% url 'trips:register' %}" class="inline-flex items-center justify-center w-full sm:w-auto rounded-xl bg-brand-500 hover:bg-brand-600 text-white px-8 py-4 font-bold text-lg shadow-button hover:shadow-xl tween transform hover:scale-105">
+                  Join Trip - ₹1199 onwards
+                </a>
+              {% else %}
+                <a href="{% url 'accounts:resend-verification' %}"
+   class="inline-flex items-center justify-center w-full sm:w-auto rounded-xl text-white px-8 py-4 font-bold text-lg shadow-button hover:shadow-xl tween transform hover:scale-105 hover:brightness-110"
+   style="background-color: #f59e0b;">
+    Verify Email to Join
+</a>
+              {% endif %}
             {% else %}
-              <a href="{% url 'accounts:resend-verification' %}"
-                 class="inline-flex items-center rounded-lg border px-4 py-2 hover:bg-gray-100">
-                Verify your email to join
+              <a href="{% url 'accounts:login' %}?next={% url 'trips:register' %}" class="inline-flex items-center justify-center w-full sm:w-auto rounded-xl bg-brand-500 hover:bg-brand-600 text-white px-8 py-4 font-bold text-lg shadow-button hover:shadow-xl tween transform hover:scale-105">
+                Join Trip - From ₹1199
               </a>
             {% endif %}
-            <a href="{% url 'trips:my' %}"
-               class="inline-flex items-center rounded-lg border px-4 py-2 hover:bg-gray-100">
-              My Trip
+            <a href="{% url 'trips:trip-details' %}" class="inline-flex items-center justify-center w-full sm:w-auto rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-6 py-4 font-medium tween">
+              Learn More
             </a>
-          {% else %}
-            <a href="{% url 'login' %}?next={% url 'trips:register' %}"
-               class="inline-flex items-center rounded-lg bg-black text-white px-4 py-2 hover:bg-black/90">
-              Join this trip
-            </a>
-            <a href="{% url 'accounts:signup' %}"
-               class="inline-flex items-center rounded-lg border px-4 py-2 hover:bg-gray-100">
-              Create an account
-            </a>
-          {% endif %}
-          <a href="{% url 'trips:trip-details' %}" class="underline">Learn more</a>
-        </div>
-      </div>
-    </section>
-
-    {# ===== Contrast band: Included + Pricing ===== #}
-    <section class="rounded-2xl bg-gray-50 p-6 md:p-8 mb-10">
-      <div class="grid lg:grid-cols-3 gap-6">
-        <div class="rounded-2xl border bg-white p-6 shadow-sm">
-          <h2 class="text-lg font-semibold mb-3">What’s included</h2>
-          <ul class="list-disc pl-5 text-sm space-y-1">
-            <li>🎟️ Entry Pass (Theme <em>or</em> Water Park — your choice)</li>
-            <li>🚌 Luxury Bus Travel</li>
-          </ul>
-        </div>
-
-        <div class="rounded-2xl border bg-white p-6 shadow-sm">
-          <h2 class="text-lg font-semibold mb-3">Pricing & Discounts</h2>
-          <div class="grid gap-2 text-sm">
-            <div><span class="font-medium">💰 Fees:</span> ₹1299</div>
-            <div><span class="font-medium">🐦 Early Bird:</span> First 10 seats @ ₹1199 (till 31 Aug)</div>
-            <div><span class="font-medium">👯 Group of 8+:</span> ₹1199 per person</div>
           </div>
-          <div class="mt-3 text-sm text-gray-600">⚡ Limited Seats — Hurry!</div>
-        </div>
 
-        <div class="rounded-2xl border bg-white p-6 shadow-sm">
-          <h2 class="text-lg font-semibold mb-3">Quick facts</h2>
-          <ul class="text-sm space-y-1">
-            <li>✅ Email verification required to join</li>
-            <li>✅ Ticket reference emailed after booking</li>
-            <li>✅ Headcount tracked for outbound & return</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    {# ===== Long details (if any) ===== #}
-    {% if active_trip.details %}
-      <section class="rounded-2xl border bg-white p-6 md:p-8 mb-10 shadow-sm">
-        <h2 class="text-lg font-semibold mb-3">About this trip</h2>
-        <div class="prose max-w-none text-sm leading-relaxed">
-          {{ active_trip.details|linebreaksbr }}
-        </div>
-        <div class="mt-3">
-          <a href="{% url 'trips:trip-details' %}" class="text-sm underline">Read full details</a>
-        </div>
-      </section>
-    {% endif %}
-
-    {# ===== Announcements ===== #}
-    <section class="rounded-2xl border bg-white p-6 md:p-8 mb-10 shadow-sm">
-      <h2 class="text-lg font-semibold mb-3">Announcements</h2>
-      <ul class="list-disc pl-5 text-sm space-y-1 text-gray-700">
-        <li>Early-bird seats auto-close after first 10 joins.</li>
-        <li>Ticket references are emailed once booking is done.</li>
-        <li>We’ll post day-before reminders here and email you.</li>
-      </ul>
-    </section>
-
-    {# ===== FAQ / Notes (contrast) ===== #}
-    <section class="rounded-2xl bg-gray-50 p-6 md:p-8 mb-10">
-      <div class="grid md:grid-cols-2 gap-6">
-        <div class="rounded-2xl border bg-white p-6 shadow-sm">
-          <h3 class="font-semibold mb-3">FAQs</h3>
-          <div class="text-sm">
-            <p class="font-medium">Can I choose Theme or Water Park?</p>
-            <p class="text-gray-600 mb-3">Yes — pick your park while joining.</p>
-
-            <p class="font-medium">How will I get my ticket?</p>
-            <p class="text-gray-600 mb-3">We’ll email the Imagica booking reference once booked.</p>
-
-            <p class="font-medium">Where do we meet?</p>
-            <p class="text-gray-600">See the pickup details above. We’ll also email reminders.</p>
+          <div class="mt-10 max-w-2xl mx-auto">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-base font-medium text-white bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+              <div class="flex items-center gap-3 justify-center md:justify-start"><svg class="h-6 w-6 text-brand-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span>{{ active_trip.date }}</span></div>
+              <div class="flex items-center gap-3 justify-center md:justify-start"><svg class="h-6 w-6 text-brand-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span>{{ active_trip.meetup_time }}</span></div>
+              <div class="flex items-center gap-3 justify-center md:justify-start"><svg class="h-6 w-6 text-brand-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg><span>{{ active_trip.pickup_point }}</span></div>
+              <div class="flex items-center gap-3 justify-center md:justify-start"><svg class="h-6 w-6 text-brand-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span>₹1199 onwards</span></div>
+            </div>
           </div>
-        </div>
 
-        <div class="rounded-2xl border bg-white p-6 shadow-sm">
-          <h3 class="font-semibold mb-3">Notes</h3>
-          <ul class="list-disc pl-5 text-sm space-y-1 text-gray-700">
-            <li>Bring a valid ID and ensure you can access your email on the day.</li>
-            <li>Arrive 15 minutes before the meetup time.</li>
-            <li>For changes or queries, reply to the confirmation email.</li>
-          </ul>
         </div>
       </div>
     </section>
 
-    {# ===== Bottom CTA bar ===== #}
-    <section class="rounded-2xl border bg-white p-4 md:p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
-      <div class="text-sm">
-        <span class="font-semibold">{{ active_trip.name }}</span> — seats are limited. Secure your spot now!
+    {# ===== "Why Join Us?" Section ===== #}
+    <section class="mb-12">
+      <div class="text-center mb-8">
+        <h2 class="text-3xl font-heading font-bold text-slate-800 dark:text-slate-100">Perfectly Adventurous</h2>
+        <p class="mt-2 text-slate-600 dark:text-slate-400">We handle the details so you can enjoy the trip.</p>
       </div>
-      <div class="flex gap-3">
-        {% if request.user.is_authenticated and request.user.email_verified %}
-          <a href="{% url 'trips:register' %}" class="inline-flex items-center rounded-lg bg-black text-white px-4 py-2 hover:bg-black/90">Join this trip</a>
-        {% elif request.user.is_authenticated %}
-          <a href="{% url 'accounts:resend-verification' %}" class="inline-flex items-center rounded-lg border px-4 py-2 hover:bg-gray-100">Verify your email to join</a>
-        {% else %}
-          <a href="{% url 'login' %}?next={% url 'trips:register' %}" class="inline-flex items-center rounded-lg bg-black text-white px-4 py-2 hover:bg-black/90">Join this trip</a>
-        {% endif %}
-        <a href="{% url 'trips:trip-details' %}" class="inline-flex items-center rounded-lg border px-4 py-2 hover:bg-gray-100">Learn more</a>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="bg-white dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg">
+          <div class="w-12 h-12 rounded-xl bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center text-brand-600 dark:text-brand-300 mb-4">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125V14.25m-17.25 4.5v-1.875a3.375 3.375 0 003.375-3.375h1.5a1.125 1.125 0 011.125 1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+</svg></div>
+          <h3 class="text-lg font-semibold mb-2 text-slate-900 dark:text-white">Seamless Travel</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400">Comfortable, luxury bus travel is included. We coordinate everything from pickup to drop-off.</p>
+        </div>
+        <div class="bg-white dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg">
+          <div class="w-12 h-12 rounded-xl bg-lagoon/10 dark:bg-lagoon/20 flex items-center justify-center text-lagoon dark:text-green-300 mb-4"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-12v.75m0 3v.75m0 3v.75m0 3V18m-3 .75h18A2.25 2.25 0 0021 16.5V7.5A2.25 2.25 0 0018.75 5.25H5.25A2.25 2.25 0 003 7.5v9A2.25 2.25 0 005.25 18.75z" /></svg></div>
+          <h3 class="text-lg font-semibold mb-2 text-slate-900 dark:text-white">All-Inclusive Fun</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400">Your entry pass to the park of your choice is covered. No hidden fees, just pure enjoyment.</p>
+        </div>
+        <div class="bg-white dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-lg">
+          <div class="w-12 h-12 rounded-xl bg-coral/10 dark:bg-coral/20 flex items-center justify-center text-coral dark:text-red-300 mb-4"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m-7.5-2.962A3.375 3.375 0 019 12.75l-1.536 1.536a3.375 3.375 0 01-4.771 4.772M6.312 6.312a3.375 3.375 0 014.771 0l1.536 1.536a3.375 3.375 0 010 4.772M12 15l-1.536-1.536a3.375 3.375 0 010-4.772l1.536-1.536a3.375 3.375 0 014.771 0M15 12l-1.536 1.536a3.375 3.375 0 01-4.771 0l-1.536-1.536" /></svg></div>
+          <h3 class="text-lg font-semibold mb-2 text-slate-900 dark:text-white">A Great Community</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400">Meet new people, make friends, and create lasting memories with a group of fellow adventurers.</p>
+        </div>
       </div>
     </section>
 
   {% else %}
-    {# ===== No active trip: still full and friendly ===== #}
-    <section class="rounded-2xl bg-gray-50 p-10 text-center">
-      <h1 class="text-3xl md:text-4xl font-bold tracking-tight">Trips opening soon</h1>
-      <p class="text-gray-600 mt-2">We’re planning the next adventure. Check back here for details.</p>
+    {# ===== NO ACTIVE TRIP STATE ===== #}
+    <section class="rounded-2xl bg-white dark:bg-slate-800/50 p-10 text-center border border-slate-200 dark:border-slate-700 shadow-xl">
+      <div class="max-w-md mx-auto">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center text-brand-600 dark:text-brand-300 mb-6">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+        </div>
+        
+        <h1 class="text-3xl font-heading font-bold text-slate-800 dark:text-slate-100 mb-3">Trips Opening Soon!</h1>
+        <p class="text-slate-600 dark:text-slate-400 mb-6">We're planning the next adventure. Check back here for details, or create an account to get notified.</p>
 
-      <div class="max-w-2xl mx-auto rounded-2xl border bg-white p-6 mt-6 text-left shadow-sm">
-        <h2 class="text-lg font-semibold mb-2">What you can expect</h2>
-        <ul class="list-disc pl-5 text-sm space-y-1">
-          <li>Day trips from Pune/Mumbai to popular destinations</li>
-          <li>Comfortable travel and group coordination</li>
-          <li>Easy joining right from this website</li>
-        </ul>
-      </div>
-
-      <div class="mt-6 flex justify-center gap-3">
-        {% if request.user.is_authenticated %}
-          <a href="{% url 'trips:my' %}" class="inline-flex items-center rounded-lg border px-4 py-2 hover:bg-gray-100">
-            My Trip
-          </a>
-          {% if request.user.is_staff %}
-            <a href="{% url 'trips:manage' %}" class="inline-flex items-center rounded-lg border px-4 py-2 hover:bg-gray-100">
-              Organizer
+        <div class="flex flex-wrap justify-center gap-4">
+          {% if request.user.is_authenticated %}
+            <a href="{% url 'trips:my' %}" class="inline-flex items-center rounded-xl bg-brand-500 hover:bg-brand-600 text-white px-5 py-3 font-medium shadow-button hover:shadow-lg tween">
+              View My Trips
+            </a>
+          {% else %}
+            <a href="{% url 'accounts:signup' %}" class="inline-flex items-center rounded-xl bg-brand-500 hover:bg-brand-600 text-white px-5 py-3 font-medium shadow-button hover:shadow-lg tween">
+              Create Free Account
+            </a>
+            <a href="{% url 'accounts:login' %}" class="inline-flex items-center rounded-xl bg-white dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 px-5 py-3 font-medium tween">
+              Log In
             </a>
           {% endif %}
-        {% else %}
-          <a href="{% url 'accounts:signup' %}" class="inline-flex items-center rounded-lg border px-4 py-2 hover:bg-gray-100">
-            Create an account
-          </a>
-          <a href="{% url 'login' %}" class="inline-flex items-center rounded-lg bg-black text-white px-4 py-2 hover:bg-black/90">
-            Log in
-          </a>
-        {% endif %}
+        </div>
       </div>
     </section>
   {% endif %}
